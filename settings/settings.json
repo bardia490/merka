@@ -1,0 +1,38 @@
+{
+    "works":
+    {
+        "goshvare_mosalasi": 
+        {
+            "monjogs" : {"832983": 3, "8321243":32},
+            "materials" : {"aviz":1}
+
+        }, 
+        "goshvare_mosalasi2": 
+        {
+            "monjogs" : {"832988":43, "1234453232":54},
+            "materials" : {"aviz":13, "gardanband":23}
+
+        } 
+    }
+    ,
+    "codes":
+    {
+        "1234453232": 1892891,
+        "832983": 829382,
+        "832988": 321434,
+        "8321243": 54231
+    },
+    "time":
+    {
+        "price": 100
+    },
+    "additional_costs":
+    {
+        "price": 90129 
+    },
+    "other_materials": 
+    {
+        "aviz":121,
+        "gardanband": 3423
+    }
+}

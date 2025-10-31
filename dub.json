@@ -1,0 +1,9 @@
+{
+	"authors": [
+		"bardia"
+	],
+	"copyright": "Copyright © 2025, bardia",
+	"description": "a simple tui app for merka accesories ",
+	"license": "MIT",
+	"name": "merka"
+}
