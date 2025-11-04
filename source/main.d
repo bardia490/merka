@@ -42,7 +42,8 @@ void loadSettings(ref JSONValue settings)
 void main(){
     JSONValue settings;
     loadSettings(settings);
-
+    
+    printHelp();
     outer:
     while (true){
         writef("please enter what you want to do: ");
@@ -71,10 +72,14 @@ void main(){
                 auto works = settings["works"].object.keys; 
                 auto currentWork = settings["works"].object[works[choice_-1]];
                 writeln("the work is: ",works[choice_-1]);
-                ulong monResults = 0;
+
+                ulong monResults = 0; // price for monjogs
                 ulong matResults = 0; // price for materials
                 ulong tResults = 0; // the price for time
+                uint addResults = 0; // the price for additional costs
                 ulong results = 0; // the final results
+                ulong mulResults = 0; // the final results after multiplier
+
                 if ("monjogs" in currentWork)
                 {
                     writeln(replicate("\&mdash;",MDASHCOUNT)); 
@@ -102,6 +107,14 @@ void main(){
                         writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,price);
                         matResults += price * ucount_/175;
                     }
+                }
+
+                if ("additional_costs" in settings)
+                {
+                    addResults = settings["additional_costs"].object["price"].get!int;
+                    writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                    writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
+                    writeln("price",printSpaces("price"), addResults);
                 }
 
                 // finding the time format
@@ -158,12 +171,34 @@ void main(){
                 
                 tResults = minutes * timePrice;
                 // finalizing the reults
-                results = monResults + matResults + tResults;
+                results = monResults + matResults + tResults + addResults;
+                // checking for discount
+                writeln(replicate("\&mdash;",MDASHCOUNT));
+                writeln("do you want to increase (or decrease) the results by a % (if not you can enter 0, e.g. 25 or 125): ");
+            uint multValue; // the multiplier
+DISCOUNT:
+                try
+                {
+                    multValue = to!uint(strip(readln()));
+                    if (multValue <= 100)
+                        mulResults = (100-multValue) * results / 100;
+                    else
+                        mulResults = multValue * results / 100;
+                }
+                catch(Exception)
+                {
+                    writeln("please enter a number!");
+                    goto DISCOUNT;
+                }
+
                 writeln(replicate("\&mdash;",MDASHCOUNT)); 
                 writeln("\x1b[38;5;146mthe final price for monjogs was: ", monResults);
                 writeln("\x1b[38;5;225mthe final price for materials was: ", matResults);
+                writeln("\x1b[38;5;225mthe final price for additional costs was: ", addResults);
                 writeln("\x1b[38;5;225mthe final price for time was: ", tResults);
-                writeln("\x1b[38;5;134mthe final price is: ", results, "\x1b[0m");
+                writeln("\x1b[38;5;225mthe discount value was: ", multValue);
+                writeln("\x1b[38;5;134mthe price (whithout discount) is: ", results, "\x1b[0m");
+                writeln("\x1b[38;5;134mthe final price (after discount) is: ", mulResults, "\x1b[0m");
                 writeln(replicate("\&mdash;",MDASHCOUNT)); 
                 break;
             case "pa", "print_all":
