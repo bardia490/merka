@@ -42,7 +42,13 @@ void loadSettings(ref JSONValue settings)
 void main(){
     JSONValue settings;
     loadSettings(settings);
-    
+
+    version(Windows)
+    {
+        import std.process: executeShell;
+        executeShell("chcp 65001");
+    }
+
     printHelp();
     outer:
     while (true){
@@ -52,11 +58,12 @@ void main(){
         import std.array: replicate;
         switch (user_input) {
             case "q", "quit":
-                writeln(replicate("\&mdash;",MDASHCOUNT));
+                printSeperator();
                 break outer;
             case "h", "help":
                 printHelp();
-                writeln(replicate("\&mdash;",MDASHCOUNT));
+                printSeperator();
+                writeln;
 				break;
             case "cl", "clear":
                 write("\x1b[2J\x1b[H");
@@ -82,7 +89,8 @@ void main(){
 
                 if ("monjogs" in currentWork)
                 {
-                    writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                    printSeperator();
+                    writeln;
                     writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
                     writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
                     foreach(name_, count_; currentWork["monjogs"].object)
@@ -97,7 +105,8 @@ void main(){
                     goto monjog_error;
                 if ("materials" in currentWork)
                 {
-                    writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                    printSeperator(); 
+                    writeln;
                     writeln(printSpaces("mat", SPACING), "\x1b[3;31mMATERIALS\x1b[23;0m");
                     writeln("material",printSpaces("material"),"count", printSpaces("count"), "price");
                     foreach(name_, count_; currentWork["materials"].object)
@@ -112,13 +121,15 @@ void main(){
                 if ("additional_costs" in settings)
                 {
                     addResults = settings["additional_costs"].object["price"].get!int;
-                    writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                    printSeperator(); 
+                    writeln;
                     writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
                     writeln("price",printSpaces("price"), addResults);
                 }
 
                 // finding the time format
-                writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                printSeperator(); 
+                writeln;
                 printTimeHelp();
                 write("time: ");
                 string duration = strip(readln());
@@ -173,7 +184,8 @@ void main(){
                 // finalizing the reults
                 results = monResults + matResults + tResults + addResults;
                 // checking for discount
-                writeln(replicate("\&mdash;",MDASHCOUNT));
+                printSeperator();
+                writeln;
                 writeln("do you want to increase (or decrease) the results by a % (if not you can enter 0, e.g. 25 or 125): ");
             uint multValue; // the multiplier
 DISCOUNT:
@@ -191,7 +203,8 @@ DISCOUNT:
                     goto DISCOUNT;
                 }
 
-                writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                printSeperator(); 
+                writeln;
                 writeln("\x1b[38;5;146mthe final price for monjogs was: ", monResults);
                 writeln("\x1b[38;5;225mthe final price for materials was: ", matResults);
                 writeln("\x1b[38;5;225mthe final price for additional costs was: ", addResults);
@@ -199,7 +212,8 @@ DISCOUNT:
                 writeln("\x1b[38;5;225mthe discount value was: ", multValue);
                 writeln("\x1b[38;5;134mthe price (whithout discount) is: ", results, "\x1b[0m");
                 writeln("\x1b[38;5;134mthe final price (after discount) is: ", mulResults, "\x1b[0m");
-                writeln(replicate("\&mdash;",MDASHCOUNT)); 
+                printSeperator(); 
+                writeln;
                 break;
             case "pa", "print_all":
                 print_all(settings);
@@ -207,14 +221,16 @@ DISCOUNT:
             case "re", "reload":
                 loadSettings(settings); 
                 writeln("new settings loaded");
-                writeln(replicate("\&mdash;",MDASHCOUNT));
+                printSeperator();
+                writeln;
                 break;
             monjog_error:
             case "monjog-error":
                 writeln("all works must have monjogs");
             default:
                 writeln("what you entered is not valid: ", user_input);
-                writeln(replicate("\&mdash;",MDASHCOUNT));
+                printSeperator();
+                writeln;
                 break;
         }
     }

@@ -13,6 +13,19 @@ string printSpaces(string s, int spacing = 0)
     
 }
 
+void printSeperator()
+{
+    version(Windows)
+    {
+        foreach(_; 0 .. MDASHCOUNT)
+            write("\u2500");
+    }
+    version(Posix)
+    {
+        writeln(replicate("\&mdash;",MDASHCOUNT));
+    }
+}
+
 void print_all(JSONValue settings, bool complete = true)
 {
     if (!complete)
@@ -42,7 +55,8 @@ void print_all(JSONValue settings, bool complete = true)
         import std.conv: to;
         if ("monjogs" in works[work])
         {
-            writeln(replicate("\&mdash;",MDASHCOUNT)); 
+            printSeperator();
+            writeln;
             writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
             writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
             foreach(monjog; works[work]["monjogs"].object.keys) 
@@ -58,7 +72,8 @@ void print_all(JSONValue settings, bool complete = true)
         }
         if ("materials" in works[work])
         {
-            writeln(replicate("\&mdash;",MDASHCOUNT)); 
+            printSeperator(); 
+            writeln;
             writeln(printSpaces("mate", SPACING), "\x1b[3;31mMATERIALS\x1b[23;0m");
             writeln("material",printSpaces("material"),"count",printSpaces("count"),"price");
             foreach(material; works[work]["materials"].object.keys)
@@ -74,6 +89,6 @@ void print_all(JSONValue settings, bool complete = true)
             }
         }
     }
-    writeln(replicate("\&mdash;",MDASHCOUNT));
-
+    printSeperator();
+    writeln;
 }
