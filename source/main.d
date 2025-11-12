@@ -58,7 +58,7 @@ void main(){
                 calculateWork(settings);
                 break;
             case "pa", "print_all":
-                print_all(settings);
+                printAll(settings);
                 break;
             case "re", "reload":
                 loadSettings(settings); 

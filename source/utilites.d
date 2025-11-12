@@ -26,7 +26,7 @@ void printSeperator()
     }
 }
 
-void print_all(JSONValue settings, bool complete = true)
+void printAll(JSONValue settings, bool complete = true)
 {
     if (!complete)
     {
@@ -59,12 +59,15 @@ void print_all(JSONValue settings, bool complete = true)
             writeln;
             writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
             writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
-            foreach(monjog; works[work]["monjogs"].object.keys) 
+            string defaultPrice = to!string(settings["codes"].object()["default"].integer);
+            foreach(monjog; works[work]["monjogs"].object.keys)
             {
                 if (monjog in settings["codes"]){
                     string monjogCount = to!string(works[work]["monjogs"].object[monjog].integer);
-                    string monjogCode = to!string(settings["codes"][monjog].integer);
-                    writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,monjogCode);
+                    string monjogPrice = to!string(settings["codes"][monjog].integer);
+                    if (monjogPrice == "-1")
+                        monjogPrice = defaultPrice;
+                    writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,monjogPrice);
                 }
                 else 
                     writeln("\x1b[39;31m", monjog, " \x1b[39m is not part of the \"codes\" group in the \"",FILENAME,"\" file");
@@ -115,7 +118,7 @@ bool calculateWork(in JSONValue settings)
     import std.string: strip;
 
     writeln("this is the list of all works");
-    print_all(settings, false); // only print the names of the works
+    printAll(settings, false); // only print the names of the works
     write("please enter the number for the work: ");
 
     auto choice_ = to!int(strip(readln()));
@@ -135,10 +138,16 @@ bool calculateWork(in JSONValue settings)
         writeln(replicate("\&mdash;",MDASHCOUNT)); 
         writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
         writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
+        auto defaultPrice = settings["codes"].object()["default"].integer;
         foreach(name_, count_; currentWork["monjogs"].object)
         {
             uint ucount_ = count_.get!int; 
-            uint price = settings["codes"].object[name_].get!int;
+            int temp = settings["codes"].object[name_].get!int;
+            uint price;
+            if (temp == -1)
+                price = to!uint(defaultPrice);
+            else
+                price = temp;
             writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,price);
             monResults += price * ucount_/175;
         }
