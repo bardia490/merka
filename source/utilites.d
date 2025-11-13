@@ -59,6 +59,22 @@ bool checkVariable(string var, VARIABLE_CHECKER check)
     }
 }
 
+string prettify(in int s)
+{
+    char[] s2;
+
+    import std.conv: to;
+
+       s2 = to!string(s).dup(); 
+       auto l = s2.length;
+       while(l > 3)
+       {
+           s2 = s2[0..l-3] ~ "," ~ s2[l-3 .. $];
+           l -= 3;
+       }
+    return s2.idup();
+}
+
 void printAll(JSONValue settings, bool complete = true)
 {
     if (!complete)
@@ -70,21 +86,17 @@ void printAll(JSONValue settings, bool complete = true)
         {
             writeln(index_+1,": \x1b[1m",work, "\x1b[22m");
         }
-            write("\x1b[38;5;166m");
-            writeln(replicate("<>", MDASHCOUNT/2));
-            write("\x1b[0m");
+            writeln("\x1b[38;5;166m",replicate("<>", MDASHCOUNT/2), "\x1b[0m");
             return;
     }
     auto works = settings["works"].object; 
     foreach (work; works.keys)
     {
-        write("\x1b[0;34m");
-        writeln(replicate("<>", MDASHCOUNT/2));
-        write("\x1b[0m");
+        write();
+        writeln("\x1b[0;34m", replicate("<>", MDASHCOUNT/2), "\x1b[0m");
         writeln("\x1b[1m",work, "\x1b[22m");
-        write("\x1b[0;34m");
-        writeln(replicate("<>", MDASHCOUNT/2));
-        write("\x1b[0;34m");
+        writeln("\x1b[0;34m",replicate("<>", MDASHCOUNT/2), "\x1b[0;34m");
+
         import std.conv: to;
         if ("monjogs" in works[work])
         {
@@ -92,15 +104,15 @@ void printAll(JSONValue settings, bool complete = true)
             writeln;
             writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
             writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
-            string defaultPrice = to!string(settings["codes"].object()["default"].integer);
+            int defaultPrice = to!int(settings["codes"].object()["default"].integer);
             foreach(monjog; works[work]["monjogs"].object.keys)
             {
                 if (monjog in settings["codes"]){
                     string monjogCount = to!string(works[work]["monjogs"].object[monjog].integer);
-                    string monjogPrice = to!string(settings["codes"][monjog].integer);
-                    if (monjogPrice == "-1")
+                    int monjogPrice = to!int(settings["codes"][monjog].integer);
+                    if (monjogPrice == -1)
                         monjogPrice = defaultPrice;
-                    writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,monjogPrice);
+                    writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,prettify(monjogPrice));
                 }
                 else 
                     writeln("\x1b[39;31m", monjog, " \x1b[39m is not part of the \"codes\" group in the \"",FILENAME,"\" file");
@@ -117,8 +129,8 @@ void printAll(JSONValue settings, bool complete = true)
                 if (material in settings["other_materials"]) 
                 {
                     auto materialCount = to!string (works[work]["materials"].object[material].integer);
-                    auto materialCode = to!string(settings["other_materials"][material].integer);
-                    writeln(material, printSpaces(material), materialCount,printSpaces(materialCount),materialCode);
+                    int materialCode = to!int(settings["other_materials"][material].integer);
+                    writeln(material, printSpaces(material), materialCount,printSpaces(materialCount),prettify(materialCode));
                 }
                 else 
                     writeln("\x1b[39;31m", material, " \x1b[39m is not part of the \"other_materials\" group in the \"settings/settings.json\" file");
@@ -129,6 +141,7 @@ void printAll(JSONValue settings, bool complete = true)
     printSeperator();
     writeln;
 }
+
 
 void printTimeHelp() // used in calculateWork function
 {
@@ -182,7 +195,7 @@ bool calculateWork(in JSONValue settings)
                 price = defaultPrice;
             else
                 price = temp;
-            writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,price);
+            writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,prettify(to!int(price)));
             monResults += to!uint(price * ucount_/175);
         }
     }
@@ -197,7 +210,7 @@ bool calculateWork(in JSONValue settings)
         {
             uint ucount_ = count_.get!int; 
             uint price = settings["other_materials"].object[name_].get!int;
-            writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,price);
+            writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,prettify(to!int(price)));
             matResults += price * ucount_/175;
         }
     }
@@ -207,7 +220,7 @@ bool calculateWork(in JSONValue settings)
         addResults = settings["additional_costs"].object["price"].get!int;
         writeln(replicate("\&mdash;",MDASHCOUNT)); 
         writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
-        writeln("price",printSpaces("price"), addResults);
+        writeln("price",printSpaces("price"), prettify(to!int(addResults)));
     }
 
     // finding the time format
@@ -265,7 +278,7 @@ bool calculateWork(in JSONValue settings)
     results = monResults + matResults + tResults + addResults;
     // checking for discount
     writeln(replicate("\&mdash;",MDASHCOUNT));
-    writeln("do you want to increase (or decrease) the results by a % (if not you can enter 0, e.g. 25 or 125): ");
+    write("do you want to increase (or decrease) the results by a % (if not you can enter 0, e.g. 25 or 125): ");
     uint multValue; // the multiplier
 DISCOUNT:
     try
@@ -283,13 +296,13 @@ DISCOUNT:
     }
 
     writeln(replicate("\&mdash;",MDASHCOUNT));
-    writeln("\x1b[38;5;146mthe final price for monjogs was: ", monResults);
-    writeln("\x1b[38;5;225mthe final price for materials was: ", matResults);
-    writeln("\x1b[38;5;225mthe final price for additional costs was: ", addResults);
-    writeln("\x1b[38;5;225mthe final price for time was: ", tResults);
+    writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!int(monResults)));
+    writeln("\x1b[38;5;225mthe final price for materials was: ", prettify(to!int(matResults)));
+    writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify(to!int(addResults)));
+    writeln("\x1b[38;5;225mthe final price for time was: ", prettify(to!int(tResults)));
     writeln("\x1b[38;5;225mthe discount value was: ", multValue);
-    writeln("\x1b[38;5;134mthe price (whithout discount) is: ", results, "\x1b[0m");
-    writeln("\x1b[38;5;134mthe final price (after discount) is: ", mulResults, "\x1b[0m");
+    writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify(to!int(results)), "\x1b[0m");
+    writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
     writeln(replicate("\&mdash;",MDASHCOUNT)); 
     return true;
 }
