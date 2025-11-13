@@ -26,6 +26,39 @@ void printSeperator()
     }
 }
 
+enum VARIABLE_CHECKER
+{
+    INT,
+    INTEGER,
+    FLOAT
+}
+
+bool checkVariable(string var, VARIABLE_CHECKER check)
+{
+    import std.conv: to;
+    try
+    {
+        switch (check)
+        {
+            case VARIABLE_CHECKER.INT, VARIABLE_CHECKER.INTEGER:
+                to!int(var);
+                return true;
+                break;
+            case VARIABLE_CHECKER.FLOAT:
+                to!float(var);
+                return true;
+                break;
+            default:
+                return true;
+        }
+    }
+    catch (Exception)
+    {
+        writeln("\x1B[1;31msorry could not convert ", var, "to ", check, "\x1B[0m");
+        return false;
+    }
+}
+
 void printAll(JSONValue settings, bool complete = true)
 {
     if (!complete)
@@ -141,8 +174,8 @@ bool calculateWork(in JSONValue settings)
         auto defaultPrice = settings["codes"].object()["default"].integer;
         foreach(name_, count_; currentWork["monjogs"].object)
         {
-            uint ucount_ = count_.get!int; 
-            int temp = settings["codes"].object[name_].get!int;
+            uint ucount_ = to!uint(count_.get!int); 
+            uint temp = to!uint(settings["codes"].object[name_].get!int);
             uint price;
             if (temp == -1)
                 price = to!uint(defaultPrice);
@@ -263,25 +296,96 @@ DISCOUNT:
 void addWork(ref JSONValue settings)
 {
     import std.string;
+    import std.conv: to;
     writeln(replicate("\&mdash;",MDASHCOUNT));
     write("please enter the name of the work: ");
     string workName = strip(readln());
+    settings["works"].object()[workName] = JSONValue.emptyObject;
+    settings["works"].object()[workName].object()["monjogs"] = JSONValue.emptyObject;
+    auto currentWorkMonjogs = "monjogs" in settings["works"].object()[workName].object();
     string[] monjogCodes = [];
     while(true)
     {
-        write("please enter the (next) monjog code(s): ");
+        write("please enter the (next) monjog code(s) or press Enter to finish adding monjogs: ");
+
         import std.array: split;
         auto codes = split(strip(readln()));
-        if (codes[0] == "") break;
+
+        if (!codes.length) break;
         monjogCodes ~= codes;
+
         foreach(code; codes)
         {
+            write("please enter the \x1B[1;31mnumber\x1B[0m of monjogs for code ", code, ": ");
+            while(true)
+            {
+                auto codeCountStr = strip(readln());
+                int codeCount = 0;
+                if (checkVariable(codeCountStr, VARIABLE_CHECKER.INT))
+                {
+                    codeCount = to!int(codeCountStr);
+                    (*currentWorkMonjogs)[code] = codeCount;
+                    break;
+                }
+                write("please enter the \x1B[1;31mnumber\x1B[0m of monjogs for code ", code, ": ");
+            }
+            writeln("-------------------------");
             if (code !in settings["codes"])
             {
-                write("please enter the price for this monjog(press Enter for default)");
+                write("please enter the \x1B[1;31mprice\x1B[0m for ", code ," monjog (press Enter for default): ");
                 auto price = strip(readln());
-                settings["codes"][code] = price;
+                if (!price.length) 
+                    settings["codes"][code] = -1;
+                else
+                    settings["codes"][code] = to!int(price);
+            writeln("-------------------------");
             }
         }
     }
+    printSeperator();
+    write("do you want to add new materials (such as aviz) to work: ", workName, ":(y/n) ");
+    auto answer = strip(readln());
+    if (answer == "y" || answer == "yes")
+    {
+        settings["works"].object()[workName].object()["materials"] = JSONValue.emptyObject;
+        auto currentWorkMaterials = "materials" in settings["works"].object()[workName].object(); // for storing the new materials
+
+        while(true)
+        {
+            write("please enter the material name(s) or press Enter to finish adding materials: ");
+
+            import std.array: split;
+            auto materialNames = split(strip(readln()));
+
+            if (!materialNames.length) break;
+
+            foreach(material; materialNames)
+            {
+                write("please enter the \x1B[1;31mnumber\x1B[0m of ", material, ": ");
+                while(true)
+                {
+                    auto materialCountStr = strip(readln());
+                    int materialCount = 0;
+                    if (checkVariable(materialCountStr, VARIABLE_CHECKER.INT))
+                    {
+                        materialCount = to!int(materialCountStr);
+                        (*currentWorkMaterials)[material] = materialCount;
+                        break;
+                    }
+                    write("please enter the \x1B[1;31mnumber\x1B[0m of monjogs for material ", material, ": ");
+                }
+                if (material !in settings["other_materials"])
+                {
+                    write("please enter the \x1B[1;31mprice\x1B[0m for ", material ," (press Enter for default): ");
+                    auto price = strip(readln());
+                    if (!price.length)
+                        settings["other_materials"][material] = -1;
+                    else
+                        settings["other_materials"][material] = to!int(price);
+                }
+            }
+        }
+    }
+    import std.file: write;
+    write("settings/settings.json",settings.toPrettyString());
 }

@@ -66,6 +66,10 @@ void main(){
                 printSeperator();
                 writeln;
                 break;
+            case "add":
+                addWork(settings);
+                printSeperator();
+                break;
             case "monjog-error":
                 writeln("all works must have monjogs");
                 break;
