@@ -14,7 +14,7 @@ void printHelp(){
     writeln("type ca or \"calculate\" to calculate the price for a work");
     writeln("type pa or print_all to print all the works");
     writeln("type re or \"reload\" to reload the contents of the settings file");
-    //writeln("type \'add\' to add a new work");
+    writeln("type \'add\' to add a new work");
 }
 
 // use this to initalize (or reload) the settings file

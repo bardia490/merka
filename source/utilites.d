@@ -269,15 +269,19 @@ void addWork(ref JSONValue settings)
     string[] monjogCodes = [];
     while(true)
     {
-        write("please enter the (next) monjog code: ");
-        auto code = strip(readln());
-        if (code == "") break;
-        monjogCodes ~= code;
-        if (code in settings["codes"])
+        write("please enter the (next) monjog code(s): ");
+        import std.array: split;
+        auto codes = split(strip(readln()));
+        if (codes[0] == "") break;
+        monjogCodes ~= codes;
+        foreach(code; codes)
         {
-            write("please enter the price for this monjog");
-            auto price = strip(readln());
-            settings["codes"][code] = price;
+            if (code !in settings["codes"])
+            {
+                write("please enter the price for this monjog(press Enter for default)");
+                auto price = strip(readln());
+                settings["codes"][code] = price;
+            }
         }
     }
 }
