@@ -120,7 +120,8 @@ void printAll(JSONValue settings, bool complete = true)
                     auto materialCode = to!string(settings["other_materials"][material].integer);
                     writeln(material, printSpaces(material), materialCount,printSpaces(materialCount),materialCode);
                 }
-                else writeln("\x1b[39;31m", material, " \x1b[39m is not part of the \"other_materials\" group in the \"settings/settings.json\" file");
+                else 
+                    writeln("\x1b[39;31m", material, " \x1b[39m is not part of the \"other_materials\" group in the \"settings/settings.json\" file");
 
             }
         }
@@ -171,18 +172,18 @@ bool calculateWork(in JSONValue settings)
         writeln(replicate("\&mdash;",MDASHCOUNT)); 
         writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
         writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
-        auto defaultPrice = settings["codes"].object()["default"].integer;
+        float defaultPrice = to!float(settings["codes"].object()["default"].integer);
         foreach(name_, count_; currentWork["monjogs"].object)
         {
-            uint ucount_ = to!uint(count_.get!int); 
-            uint temp = to!uint(settings["codes"].object[name_].get!int);
-            uint price;
+            float ucount_ = to!float(count_.get!int); 
+            float temp = to!float(settings["codes"].object[name_].get!int);
+            float price;
             if (temp == -1)
-                price = to!uint(defaultPrice);
+                price = defaultPrice;
             else
                 price = temp;
             writeln(name_,printSpaces(name_),ucount_,printSpaces(to!string(ucount_)) ,price);
-            monResults += price * ucount_/175;
+            monResults += to!uint(price * ucount_/175);
         }
     }
     else 
