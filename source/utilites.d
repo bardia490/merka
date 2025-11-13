@@ -19,6 +19,7 @@ void printSeperator()
     {
         foreach(_; 0 .. MDASHCOUNT)
             write("\u2500");
+        writeln;
     }
     version(Posix)
     {
@@ -101,7 +102,6 @@ void printAll(JSONValue settings, bool complete = true)
         if ("monjogs" in works[work])
         {
             printSeperator();
-            writeln;
             writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
             writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
             int defaultPrice = to!int(settings["codes"].object()["default"].integer);
@@ -121,7 +121,6 @@ void printAll(JSONValue settings, bool complete = true)
         if ("materials" in works[work])
         {
             printSeperator(); 
-            writeln;
             writeln(printSpaces("mate", SPACING), "\x1b[3;31mMATERIALS\x1b[23;0m");
             writeln("material",printSpaces("material"),"count",printSpaces("count"),"price");
             foreach(material; works[work]["materials"].object.keys)
@@ -139,7 +138,6 @@ void printAll(JSONValue settings, bool complete = true)
         }
     }
     printSeperator();
-    writeln;
 }
 
 
@@ -311,13 +309,12 @@ void addWork(ref JSONValue settings)
 {
     import std.string;
     import std.conv: to;
-    writeln(replicate("\&mdash;",MDASHCOUNT));
+    printSeperator();
     write("please enter the name of the work: ");
     string workName = strip(readln());
     settings["works"].object()[workName] = JSONValue.emptyObject;
     settings["works"].object()[workName].object()["monjogs"] = JSONValue.emptyObject;
     auto currentWorkMonjogs = "monjogs" in settings["works"].object()[workName].object();
-    string[] monjogCodes = [];
     while(true)
     {
         write("please enter the (next) monjog code(s) or press Enter to finish adding monjogs: ");
@@ -326,7 +323,6 @@ void addWork(ref JSONValue settings)
         auto codes = split(strip(readln()));
 
         if (!codes.length) break;
-        monjogCodes ~= codes;
 
         foreach(code; codes)
         {

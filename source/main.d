@@ -1,3 +1,16 @@
+/*
+ *                                       /$$                
+ *                                      | $$                
+ *     /$$$$$$/$$$$   /$$$$$$   /$$$$$$ | $$   /$$  /$$$$$$ 
+ *    | $$_  $$_  $$ /$$__  $$ /$$__  $$| $$  /$$/ |____  $$
+ *    | $$ \ $$ \ $$| $$$$$$$$| $$  \__/| $$$$$$/   /$$$$$$$
+ *    | $$ | $$ | $$| $$_____/| $$      | $$_  $$  /$$__  $$
+ *    | $$ | $$ | $$|  $$$$$$$| $$      | $$ \  $$|  $$$$$$$
+ *    |__/ |__/ |__/ \_______/|__/      |__/  \__/ \_______/
+ *                                                          
+ *                                                          
+ *                                                          
+*/
 import std.stdio;
 import std.string;
 import std.process;
@@ -5,16 +18,22 @@ import std.json;
 import std.file;
 import utilites;
 
+void printNameArt()
+{
+    string s = readText("art.txt");
+    writeln(s);
+}
+
 void printHelp(){
     writeln("application help:");
     writeln("type q or quit anytime to quit the app");
     writeln("type h anytime to see the help");
     //writeln("type a or all to see all the reports so far");
     writeln("type cl or clear to clear the screen");
-    writeln("type ca or \"calculate\" to calculate the price for a work");
+    writeln("type ca or calculate to calculate the price for a work");
     writeln("type pa or print_all to print all the works");
-    writeln("type re or \"reload\" to reload the contents of the settings file");
-    writeln("type \'add\' to add a new work");
+    writeln("type re or reload to reload the contents of the settings file");
+    writeln("type add to add a new work");
 }
 
 // use this to initalize (or reload) the settings file
@@ -34,6 +53,7 @@ void main(){
         executeShell("chcp 65001");
     }
 
+    printNameArt();
     printHelp();
     outer:
     while (true){
@@ -48,7 +68,6 @@ void main(){
             case "h", "help":
                 printHelp();
                 printSeperator();
-                writeln;
 				break;
             case "cl", "clear":
                 write("\x1b[2J\x1b[H");
@@ -64,7 +83,6 @@ void main(){
                 loadSettings(settings); 
                 writeln("new settings loaded");
                 printSeperator();
-                writeln;
                 break;
             case "add":
                 addWork(settings);
@@ -76,7 +94,6 @@ void main(){
             default:
                 writeln("what you entered is not valid: ", user_input);
                 printSeperator();
-                writeln;
                 break;
         }
     }
