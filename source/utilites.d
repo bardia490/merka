@@ -2,7 +2,7 @@ import std.json, std.stdio, std.array;
 
 enum MDASHCOUNT = 50;
 enum SPACING = 20;
-enum FILENAME = "./settings/settings.json";
+enum FILENAME = "./settings/works.json";
 
 // this funcion calculates the number of spaces needed to print before the string
 string printSpaces(string s, int spacing = 0)
