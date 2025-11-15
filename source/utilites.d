@@ -3,7 +3,13 @@ import std.json, std.stdio, std.array;
 enum MDASHCOUNT = 50;
 enum SPACING = 20;
 enum FILENAME = "./settings/works.json";
+enum RED = "\x1B[1;31m";
+enum RESET = "\x1B[0m";
 
+string makeRed(string s)
+{
+    return RED ~ s ~ RESET;
+}
 // this funcion calculates the number of spaces needed to print before the string
 string printSpaces(string s, int spacing = 0)
 {
@@ -93,7 +99,6 @@ void printAll(JSONValue settings, bool complete = true)
     auto works = settings["works"].object; 
     foreach (work; works.keys)
     {
-        write();
         writeln("\x1b[0;34m", replicate("<>", MDASHCOUNT/2), "\x1b[0m");
         writeln("\x1b[1m",work, "\x1b[22m");
         writeln("\x1b[0;34m",replicate("<>", MDASHCOUNT/2), "\x1b[0;34m");
@@ -398,4 +403,13 @@ void addWork(ref JSONValue settings)
     }
     import std.file: write;
     write("settings/settings.json",settings.toPrettyString());
+}
+
+void removeWork(ref JSONValue settings)
+{
+    import std.string: strip;
+    write("please enter the name of the work that you want to: ", makeRed("remove"), " ");
+    string workName = strip(readln());
+    writeln("the work name is: ", workName);
+    //auto work = settings["works"].object()[workName];
 }

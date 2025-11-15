@@ -34,6 +34,7 @@ void printHelp(){
     writeln("type pa or print_all to print all the works");
     writeln("type re or reload to reload the contents of the settings file");
     writeln("type add to add a new work");
+    writeln("type remove to remove a previous work");
 }
 
 // use this to initalize (or reload) the settings file
