@@ -208,7 +208,7 @@ class DataBaseManager
         results = monResults + matResults + tResults + addResults;
 
         // checking for discount
-        writeln(replicate("\&mdash;",MDASHCOUNT));
+        printSeperator();
         write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER, e.g. 25 or 125): ");
         uint multValue; // the multiplier
 DISCOUNT:
@@ -234,7 +234,7 @@ DISCOUNT:
             goto DISCOUNT;
         }
 
-        writeln(replicate("\&mdash;",MDASHCOUNT));
+        printSeperator();
         writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!int(monResults)));
         writeln("\x1b[38;5;225mthe final price for materials was: ", prettify(to!int(matResults)));
         writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify(to!int(addResults)));
@@ -242,7 +242,7 @@ DISCOUNT:
         writeln("\x1b[38;5;225mthe discount value was: ", multValue);
         writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify(to!int(results)), "\x1b[0m");
         writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
-        writeln(replicate("\&mdash;",MDASHCOUNT)); 
+        printSeperator();
         return true;
     }
 
