@@ -9,9 +9,19 @@ class DataBaseManager
     
     this()
     {
-        import std.file: readText;
-        string contents = readText(dataBasePath);
-        db = parseJSON(contents);
+        import std.file: readText, exists;
+        if (exists(dataBasePath))
+        {
+            string contents = readText(dataBasePath);
+            db = parseJSON(contents);
+        }
+        else
+        {
+            printSeperator();
+            writeln(makeRed("there was no work file"));
+            db = JSONValue.emptyObject;
+            printSeperator();
+        }
     }
     void reload()
     {
@@ -19,8 +29,22 @@ class DataBaseManager
         string contents = readText(dataBasePath);
         db = parseJSON(contents);
     }
+
+    bool isDataBaseEmpty() // checks to see if the data base is empty or not
+    {
+        if("works" !in db)
+            return true;
+        return false;
+    }
+
     void printAll(bool complete = true)
     {
+        if (isDataBaseEmpty)
+        {
+            writeln(makeRed("could not print the name of the works, the data base was empty"));
+            printSeperator();
+            return;
+        }
         import std.array: replicate;
         if (!complete)
         {
@@ -38,6 +62,7 @@ class DataBaseManager
         foreach (work; works)
             printWork(work);
     }
+
     void printWork(string workName)
     {
         import std.array: replicate;
@@ -48,6 +73,7 @@ class DataBaseManager
         printMonjog(work);
         printMaterials(work);
     }
+
     void printMonjog(in JSONValue work)
     {
         import std.conv: to;
@@ -72,6 +98,7 @@ class DataBaseManager
             }
         }
     }
+
     void printMaterials(in JSONValue work)
     {
         import std.conv: to;
@@ -104,15 +131,28 @@ class DataBaseManager
         import std.conv: to;
         import std.string: strip;
 
+        if(isDataBaseEmpty)
+        {
+            writeln(makeRed("there was no work in the data base"));
+            printSeperator();
+            return false;
+        }
+
         writeln("this is the list of all works");
         printAll(false); // only print the names of the works
         write("please enter the number for the work: ");
 
-        auto choice_ = to!int(strip(readln()));
-        auto works = db["works"].object.keys; 
-        auto currentWork = db["works"].object[works[choice_-1]];
-        // writeln("the work is: ",works[choice_-1]);
+        auto workName = strip(readln());
+        string[] workNames = db["works"].object.keys;
 
+        if(checkVariable(workName, VARIABLE_CHECKER.INT, true)) // check if it is entered as number
+        {
+            workName = workNames[to!int(workName) - 1]; // convert to name
+        }
+        auto currentWorkRef = workName in db["works"];
+        if (!currentWorkRef)
+             return false;
+        auto currentWork = *currentWorkRef;
         ulong monResults = 0; // price for monjogs
         ulong matResults = 0; // price for materials
         ulong tResults = 0; // the price for time
@@ -167,16 +207,25 @@ class DataBaseManager
         results = monResults + matResults + tResults + addResults;
         // checking for discount
         writeln(replicate("\&mdash;",MDASHCOUNT));
-        write("do you want to increase (or decrease) the results by a % (if not you can enter 0, e.g. 25 or 125): ");
+        write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER
+            , e.g. 25 or 125): ");
         uint multValue; // the multiplier
 DISCOUNT:
         try
         {
-            multValue = to!uint(strip(readln()));
-            if (multValue <= 100)
-                mulResults = (100-multValue) * results / 100;
+            string choice = strip(readln());
+            if(choice.length != 0)
+            {
+                multValue = to!uint(choice);
+                if (multValue <= 100)
+                    mulResults = (100-multValue) * results / 100;
+                else
+                    mulResults = multValue * results / 100;
+            }
             else
-                mulResults = multValue * results / 100;
+            {
+                mulResults = 0;
+            }
         }
         catch(Exception)
         {
@@ -290,5 +339,39 @@ DISCOUNT:
         }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
+    }
+
+    void removeWork()
+    {
+        import std.string: strip;
+        import std.conv: to;
+
+        if(isDataBaseEmpty)
+        {
+            writeln(makeRed("there was no work in the data base"));
+            printSeperator();
+            return;
+        }
+
+        printAll(false);
+        write("please enter the name of the work that you want to ", makeRed("remove"), ": ");
+        string workName = strip(readln());
+        string[] workNames = db["works"].object().keys();
+
+        if(checkVariable(workName, VARIABLE_CHECKER.INT, true)) // check if it is entered as number
+            workName = workNames[to!int(workName) - 1]; // convert to name
+
+        if (workName in db["works"])
+        {
+            db["works"].object().remove(workName);
+            writeln("[INFO]: WORK WAS REMOVED SUCCESSFULLY");
+            import std.file: write;
+            write("settings/works.json",db.toPrettyString());
+            writeln("[INFO]: WORKS.JSON FILE WAS UPDATED SUCCESSFULLY");
+        }
+        else
+        {
+            writeln("sorry ", makeRed(workName), " wasn't found in the data base");
+        }
     }
 }

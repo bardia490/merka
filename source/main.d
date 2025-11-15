@@ -34,7 +34,7 @@ void printHelp(){
     writeln("type pa or print_all to print all the works");
     writeln("type re or reload to reload the contents of the settings file");
     writeln("type add to add a new work");
-    writeln("type remove to remove a previous work");
+    writeln("type rm or remove to remove a previous work");
 }
 
 // use this to initalize (or reload) the settings file
@@ -56,6 +56,9 @@ void main(){
         import std.process: executeShell;
         executeShell("chcp 65001");
     }
+
+    write("\x1b[2J\x1b[H");
+    stdout.flush();
 
     printNameArt();
     printHelp();
@@ -88,20 +91,24 @@ void main(){
                 dbm.printAll;
                 break;
             case "re", "reload":
-                dbm.reload();
+                dbm.reload;
                 writeln("new settings loaded");
-                printSeperator();
+                printSeperator;
                 break;
             case "add":
-                dbm.addWork();
-                printSeperator();
+                dbm.addWork;
+                printSeperator;
+                break;
+            case "rm" , "remove":
+                dbm.removeWork;
+                printSeperator;
                 break;
             case "monjog-error":
                 writeln("all works must have monjogs");
                 break;
             default:
                 writeln("what you entered is not valid: ", user_input);
-                printSeperator();
+                printSeperator;
                 break;
         }
     }

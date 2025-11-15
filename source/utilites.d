@@ -40,7 +40,7 @@ enum VARIABLE_CHECKER
     FLOAT
 }
 
-bool checkVariable(string var, VARIABLE_CHECKER check)
+bool checkVariable(string var, VARIABLE_CHECKER check, bool silent = false)
 {
     import std.conv: to;
     try
@@ -61,7 +61,8 @@ bool checkVariable(string var, VARIABLE_CHECKER check)
     }
     catch (Exception)
     {
-        writeln("\x1B[1;31msorry could not convert ", var, "to ", check, "\x1B[0m");
+        if (!silent)
+            writeln("\x1B[1;31msorry could not convert ", var, " to ", check, "\x1B[0m");
         return false;
     }
 }
@@ -151,13 +152,4 @@ ulong calcTime(uint timePrice)
     }
 
     return minutes * timePrice;
-}
-
-void removeWork(ref JSONValue settings)
-{
-    import std.string: strip;
-    write("please enter the name of the work that you want to: ", makeRed("remove"), " ");
-    string workName = strip(readln());
-    writeln("the work name is: ", workName);
-    //auto work = settings["works"].object()[workName];
 }
