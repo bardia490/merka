@@ -47,6 +47,9 @@ void loadSettings(ref JSONValue settings)
 void main(){
     JSONValue settings;
     loadSettings(settings);
+        
+    import DataBase;
+    DataBaseManager dbm = new DataBaseManager;
 
     version(Windows)
     {
@@ -75,18 +78,22 @@ void main(){
                 stdout.flush();
                 break;
             case "ca" , "calculate":
-                calculateWork(settings);
+                if (!dbm.calculateWork())
+                {
+                    writeln("sorry something went wrong");
+                    printSeperator();
+                }
                 break;
             case "pa", "print_all":
-                printAll(settings);
+                dbm.printAll;
                 break;
             case "re", "reload":
-                loadSettings(settings); 
+                dbm.reload();
                 writeln("new settings loaded");
                 printSeperator();
                 break;
             case "add":
-                addWork(settings);
+                dbm.addWork();
                 printSeperator();
                 break;
             case "monjog-error":
