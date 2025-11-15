@@ -130,6 +130,7 @@ class DataBaseManager
         import std.array: split, replicate;
         import std.conv: to;
         import std.string: strip;
+        import std.math.rounding: ceil;
 
         if(isDataBaseEmpty)
         {
@@ -176,7 +177,7 @@ class DataBaseManager
                     price = temp;
                 tempResults += price * ucount_/175;
             }
-            monResults = to!uint(tempResults);
+            monResults = tempResults.ceil.to!uint;
         }
         else 
             return false;
@@ -205,10 +206,10 @@ class DataBaseManager
 
         // finalizing the reults
         results = monResults + matResults + tResults + addResults;
+
         // checking for discount
         writeln(replicate("\&mdash;",MDASHCOUNT));
-        write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER
-            , e.g. 25 or 125): ");
+        write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER, e.g. 25 or 125): ");
         uint multValue; // the multiplier
 DISCOUNT:
         try
@@ -224,7 +225,7 @@ DISCOUNT:
             }
             else
             {
-                mulResults = 0;
+                mulResults = results;
             }
         }
         catch(Exception)
