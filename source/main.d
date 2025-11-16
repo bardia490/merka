@@ -17,6 +17,7 @@ import std.process;
 import std.json;
 import std.file;
 import utilites;
+import AppManager;
 
 void printNameArt()
 {
@@ -35,21 +36,15 @@ void printHelp(){
     writeln("type re or reload to reload the contents of the settings file");
     writeln("type add to add a new work");
     writeln("type rm or remove to remove a previous work");
-}
-
-// use this to initalize (or reload) the settings file
-void loadSettings(ref JSONValue settings)
-{
-    string contents = readText(FILENAME);
-    settings = parseJSON(contents);
+    writeln("type update to update the app");
 }
 
 void main(){
-    JSONValue settings;
-    loadSettings(settings);
-        
+
+    // initialize the data base and app manager for updates
     import DataBase;
     DataBaseManager dbm = new DataBaseManager;
+    APPManager am = new APPManager;
 
     version(Windows)
     {
@@ -102,6 +97,10 @@ void main(){
             case "rm" , "remove":
                 dbm.removeWork;
                 printSeperator;
+                break;
+            case "update":
+                am.update;
+                writeln("please close and open the app again for newer version");
                 break;
             case "monjog-error":
                 writeln("all works must have monjogs");
