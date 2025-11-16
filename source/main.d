@@ -25,7 +25,8 @@ void printNameArt()
     writeln(s);
 }
 
-void printHelp(){
+void printHelp()
+{
     writeln("application help:");
     writeln("type q or quit anytime to quit the app");
     writeln("type h anytime to see the help");
@@ -36,7 +37,7 @@ void printHelp(){
     writeln("type re or reload to reload the contents of the settings file");
     writeln("type add to add a new work");
     writeln("type rm or remove to remove a previous work");
-    writeln("type update to update the app");
+    writeln("type up or update to update the app");
 }
 
 void main(){
@@ -98,9 +99,9 @@ void main(){
                 dbm.removeWork;
                 printSeperator;
                 break;
-            case "update":
-                am.update;
-                writeln("please close and open the app again for newer version");
+            case "up", "update":
+                am.update.reportUpdate();
+                printSeperator();
                 break;
             case "monjog-error":
                 writeln("all works must have monjogs");
