@@ -41,7 +41,7 @@ class APPManager
         {
             writeln("new updates are available");
             writeln("downloading new updates");
-            writeln("git pull");
+            executeShell("git pull");
             writeln("download complete");
             writeln("rebuilding the app");
             auto buildOutput = executeShell("dub build");
