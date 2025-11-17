@@ -327,7 +327,7 @@ DISCOUNT:
                     }
                     if (material !in db["other_materials"])
                     {
-                        write("please enter the ", makeRed("price")," for ", material);
+                        write("please enter the ", makeRed("price")," for ", material, ": ");
                         auto price = strip(readln());
                         //if (!price.length)
                         //    db["other_materials"][material] = -1;

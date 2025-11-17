@@ -51,6 +51,8 @@ class APPManager
 
         if(commitAhead.output != "0\n")
             return UPDATE_STATUS.AHEAD;
+        if(commitAhead.output == "0\n" && commitBehind.output == "0\n")
+            return UPDATE_STATUS.NO_UPDATE; 
         return UPDATE_STATUS.SUCCESS;
     }
 }
@@ -75,7 +77,7 @@ void reportUpdate(APPManager.UPDATE_STATUS us)
             writeln("ahead of the main branch please push to the main repository!");
             break;
         case APPManager.UPDATE_STATUS.NO_UPDATE:
-            writeln("there was no updates");
+            writeln("everything is up to date");
             break;
     }
 }
