@@ -30,7 +30,11 @@ class APPManager
         writeln("checking for updates ...");
 
         printSeperator();
-        executeShell("git fetch");
+
+        auto fetchStatus = executeShell("git fetch");
+        if(fetchStatus.status != 0)
+            return UPDATE_STATUS.GIT_FAILED;
+
         auto commitBehind = executeShell("git rev-list --count HEAD..origin/main");
         auto commitAhead = executeShell("git rev-list --count origin/main..HEAD");
 
@@ -41,7 +45,9 @@ class APPManager
         {
             writeln("new updates are available");
             writeln("downloading new updates");
-            executeShell("git pull");
+            auto pullStatus = executeShell("git pull");
+            if (pullStatus.status != 0)
+                return UPDATE_STATUS.GIT_FAILED;
             writeln("download complete");
             writeln("rebuilding the app");
             auto buildOutput = executeShell("dub build");
