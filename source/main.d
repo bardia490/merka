@@ -55,7 +55,6 @@ void main(){
 
     printNameArt();
     printHelp();
-    writeln("test 1");
     outer:
     while (true){
         writef("please enter what you want to do: ");
