@@ -19,20 +19,32 @@ class DataBaseManager
         {
             printSeperator();
             writeln(makeRed("there was no work file"));
-            db = JSONValue.emptyObject;
-            printSeperator();
+            writeln(makeRed("using work template"));
+            string contents = readText("settings/work_template.json");
+            db = parseJSON(contents);
         }
+        printSeperator();
     }
     void reload()
     {
-        import std.file: readText;
-        string contents = readText(dataBasePath);
+        import std.file: readText, exists;
+        string contents;
+        if (exists(dataBasePath))
+        {
+            contents = readText(dataBasePath);
+        }
+        else
+        {
+            contents = readText("settings/work_template.json");
+        }
         db = parseJSON(contents);
     }
 
     bool isDataBaseEmpty() // checks to see if the data base is empty or not
     {
         if("works" !in db)
+            return true;
+        if(db["works"] == JSONValue.emptyObject)
             return true;
         return false;
     }

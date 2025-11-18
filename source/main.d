@@ -74,11 +74,8 @@ void main(){
                 stdout.flush();
                 break;
             case "ca" , "calculate":
-                if (!dbm.calculateWork())
-                {
-                    writeln("sorry something went wrong");
-                    printSeperator();
-                }
+                dbm.calculateWork();
+                printSeperator();
                 break;
             case "pa", "print_all":
                 dbm.printAll;
