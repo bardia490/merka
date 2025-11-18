@@ -5,11 +5,12 @@ description "a simple tui app for merka accesories"
 license "MIT"
 
 targetType "none"
+
 configuration "APP"{
     dependency ":application" version="*"
 }
 
-configuration "pkgUpdate"{
+configuration "Upt"{ # the pkgUpdate subPackage
     dependency ":update" version="*"
 }
 
