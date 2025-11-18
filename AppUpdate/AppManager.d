@@ -41,7 +41,7 @@ class APPManager
         if(commitBehind.status != 0 || commitAhead.status != 0)
             return UPDATE_STATUS.GIT_FAILED;
 
-        if(commitBehind.output == "0\n")
+        if(commitBehind.output != "0\n")
         {
             writeln("new updates are available");
             writeln("downloading new updates");
