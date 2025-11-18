@@ -1,0 +1,32 @@
+name "merka"
+authors "bardia"
+copyright "Copyright © 2025, bardia"
+description "a simple tui app for merka accesories"
+license "MIT"
+
+targetType "none"
+configuration "APP"{
+    dependency ":application" version="*"
+}
+
+configuration "pkgUpdate"{
+    dependency ":update" version="*"
+}
+
+subPackage {
+    name "application"
+    targetType "executable"
+    targetName "merka"
+    importPaths "Lib"
+    sourcePaths "source" "Lib"
+    sourceFiles "source/*"
+}
+
+subPackage {
+    name "update"
+    targetType "executable"
+    targetName "packageUpdate"
+    importPaths "Lib/"
+    sourcePaths "AppUpdate/" "Lib"
+    sourceFiles "AppUpdate/*"
+}

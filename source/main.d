@@ -17,7 +17,6 @@ import std.process;
 import std.json;
 import std.file;
 import utilites;
-import AppManager;
 
 void printNameArt()
 {
@@ -37,7 +36,6 @@ void printHelp()
     writeln("type re or reload to reload the contents of the settings file");
     writeln("type add to add a new work");
     writeln("type rm or remove to remove a previous work");
-    writeln("type up or update to update the app");
 }
 
 void main(){
@@ -45,7 +43,6 @@ void main(){
     // initialize the data base and app manager for updates
     import DataBase;
     DataBaseManager dbm = new DataBaseManager;
-    APPManager am = new APPManager;
 
     version(Windows)
     {
@@ -58,6 +55,7 @@ void main(){
 
     printNameArt();
     printHelp();
+    writeln("test 1");
     outer:
     while (true){
         writef("please enter what you want to do: ");
@@ -98,10 +96,6 @@ void main(){
             case "rm" , "remove":
                 dbm.removeWork;
                 printSeperator;
-                break;
-            case "up", "update":
-                am.update.reportUpdate();
-                printSeperator();
                 break;
             case "monjog-error":
                 writeln("all works must have monjogs");

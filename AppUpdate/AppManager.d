@@ -41,7 +41,7 @@ class APPManager
         if(commitBehind.status != 0 || commitAhead.status != 0)
             return UPDATE_STATUS.GIT_FAILED;
 
-        if(commitBehind.output != "0\n")
+        if(commitBehind.output == "0\n")
         {
             writeln("new updates are available");
             writeln("downloading new updates");
@@ -50,7 +50,9 @@ class APPManager
                 return UPDATE_STATUS.GIT_FAILED;
             writeln("download complete");
             writeln("rebuilding the app");
-            auto buildOutput = executeShell("dub build");
+            auto buildOutput = executeShell("dub build --config APP");
+            // writeln("the ouput was:");
+            // writeln(buildOutput.output);
             if (buildOutput.status != 0)
                 return UPDATE_STATUS.FAILED;
         }
