@@ -36,6 +36,7 @@ void printHelp()
     writeln("type re or reload to reload the contents of the settings file");
     writeln("type add to add a new work");
     writeln("type rm or remove to remove a previous work");
+    writeln("type ed or edit to edit an item");
 }
 
 void main(){
@@ -92,6 +93,9 @@ void main(){
             case "rm" , "remove":
                 dbm.removeWork;
                 printSeperator;
+                break;
+            case "ed", "edit":
+                dbm.edit();
                 break;
             case "monjog-error":
                 writeln("all works must have monjogs");

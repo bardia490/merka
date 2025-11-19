@@ -387,4 +387,64 @@ DISCOUNT:
             writeln("sorry ", makeRed(workName), " wasn't found in the data base");
         }
     }
+    void edit()
+    {
+        import std.conv: to;
+        import std.string: strip;
+
+        JSONValue item = db;
+        while(true)
+        {
+            writeln("available options: ");
+            auto options = item.object;
+            foreach(i, v; options.keys)
+                writeln(i+1, ": ", v);
+            write("what do you want to edit (press ENTER for exit): ");
+            auto choice = strip(readln());
+            if (choice.length == 0)
+                return;
+            if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
+                item = options[options.keys[to!int(choice)-1]];
+            else
+            {
+                if (choice !in options)
+                {
+                    writeln(makeRed(choice ~ " was not found in the database"));
+                    printSeperator;
+                    continue;
+                }
+                item = options[choice];
+            }
+            if (item.object.keys.length == 0)
+            {
+                if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
+                    write(makeRed(options.keys[to!int(choice)-1]));
+                else
+                    write(makeRed(choice));
+                writeln(" was empty");
+                printSeperator();
+                item = db;
+                continue;
+            }
+            else if (item.object.keys.length == 1)
+                break;
+        }
+        string key = item.object.keys[0];
+        writeln("the value for ", makeBlue(key), " is: ", item[key]);
+        while(true)
+        {
+            write("what do you want to change it to: ");
+            auto choice = strip(readln);
+            if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
+            {
+                item[key] = to!int (choice);
+                writeln ("value changed successfully");
+                printSeperator();
+                break;
+            }
+        }
+        import std.file: write;
+        write("settings/works.json",db.toPrettyString());
+        printSeperator();
+    }
 }

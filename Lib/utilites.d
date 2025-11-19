@@ -4,11 +4,17 @@ enum MDASHCOUNT = 50;
 enum SPACING = 20;
 enum FILENAME = "./settings/works.json";
 enum RED = "\x1B[1;31m";
+enum BLUE = "\x1B[1;34m";
 enum RESET = "\x1B[0m";
 
 string makeRed(string s)
 {
     return RED ~ s ~ RESET;
+}
+
+string makeBlue(string s)
+{
+    return BLUE ~ s ~ RESET;
 }
 // this funcion calculates the number of spaces needed to print before the string
 string printSpaces(string s, int spacing = 0)
