@@ -307,7 +307,7 @@ DISCOUNT:
             }
         }
         printSeperator();
-        write("do you want to add new materials (such as aviz) to work: ", workName, ":(y/n) ");
+        write("do you want to add new materials (such as aviz) to work ", workName, " (y/n): ");
         auto answer = strip(readln());
         if (answer == "y" || answer == "yes")
         {
