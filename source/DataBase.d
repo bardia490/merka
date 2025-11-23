@@ -38,6 +38,7 @@ class DataBaseManager
             contents = readText("settings/work_template.json");
         }
         db = parseJSON(contents);
+        printSeperator;
     }
 
     bool isDataBaseEmpty() // checks to see if the data base is empty or not
@@ -352,6 +353,7 @@ DISCOUNT:
         }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
+        printSeperator();
     }
 
     void removeWork()
@@ -359,6 +361,7 @@ DISCOUNT:
         import std.string: strip;
         import std.conv: to;
 
+        printSeperator();
         if(isDataBaseEmpty)
         {
             writeln(makeRed("there was no work in the data base"));
@@ -381,10 +384,12 @@ DISCOUNT:
             import std.file: write;
             write("settings/works.json",db.toPrettyString());
             writeln("[INFO]: WORKS.JSON FILE WAS UPDATED SUCCESSFULLY");
+            printSeperator();
         }
         else
         {
             writeln("sorry ", makeRed(workName), " wasn't found in the data base");
+            printSeperator();
         }
     }
     void edit()
@@ -393,6 +398,9 @@ DISCOUNT:
         import std.string: strip;
 
         JSONValue item = db;
+        bool workNameFlag = false;
+        string choice;
+        printSeperator();
         while(true)
         {
             writeln("available options: ");
@@ -400,11 +408,26 @@ DISCOUNT:
             foreach(i, v; options.keys)
                 writeln(i+1, ": ", v);
             write("what do you want to edit (press ENTER for exit): ");
-            auto choice = strip(readln());
+            choice = strip(readln());
             if (choice.length == 0)
+            {
+                printSeperator;
                 return;
+            }
             if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
+            {
                 item = options[options.keys[to!int(choice)-1]];
+                if (options.keys[to!int(choice)-1] == "works")
+                {
+                    write("do you want to change the name of one the " ~ makeBlue("works") ~ " (y/n): ");
+                    choice = strip(readln());
+                    if (choice == "y" || choice == "Y")
+                    {
+                        workNameFlag = true;
+                        break; // going to change the name of one the works
+                    }
+                }
+            }
             else
             {
                 if (choice !in options)
@@ -414,6 +437,16 @@ DISCOUNT:
                     continue;
                 }
                 item = options[choice];
+                if (choice == "works")
+                {
+                    write("do you want to change the name of one the " ~ makeBlue("works") ~ " (y/n): ");
+                    auto dummyChoice = strip(readln());
+                    if (dummyChoice == "y" || dummyChoice == "Y")
+                    {
+                        workNameFlag = true;
+                        break; // going to change the name of one the works
+                    }
+                }
             }
             if (item.object.keys.length == 0)
             {
@@ -426,15 +459,53 @@ DISCOUNT:
                 item = db;
                 continue;
             }
-            else if (item.object.keys.length == 1)
+            else if (item.object.keys.length == 1) // only break if the item only had one value 
                 break;
+            writeln(item.object.keys);
+        }
+        if (workNameFlag == true)
+        {
+            if (db["works"] == JSONValue.emptyObject || "works" !in db)
+            {
+                writeln(makeRed("there was no work in the data base"));
+                printSeperator;
+                return;
+            }
+            while (true)
+            {
+                write("which name do you want to change: ");
+                printAll(false);
+                choice = strip(readln());
+                auto workNames = db["works"].object;
+                if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
+                    choice = workNames.keys[to!int(choice)-1];
+                else
+                {
+                    if (choice !in workNames)
+                    {
+                        writeln(makeRed(choice ~ " was not found in the database"));
+                        printSeperator;
+                        continue;
+                    }
+                }
+                break;
+            }
+            write("what do you want to change " ~ makeBlue(choice) ~ " to: ");
+            string previousName = choice;
+            choice = strip(readln());
+            db["works"][choice] = db["works"][previousName];
+            db["works"].object.remove(previousName);
+            import std.file: write;
+            write("settings/works.json",db.toPrettyString());
+            printSeperator();
+            return;
         }
         string key = item.object.keys[0];
         writeln("the value for ", makeBlue(key), " is: ", item[key]);
         while(true)
         {
             write("what do you want to change it to: ");
-            auto choice = strip(readln);
+            choice = strip(readln);
             if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
             {
                 item[key] = to!int (choice);
@@ -445,6 +516,5 @@ DISCOUNT:
         }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
-        printSeperator();
     }
 }

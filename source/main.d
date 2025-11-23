@@ -37,6 +37,7 @@ void printHelp()
     writeln("type add to add a new work");
     writeln("type rm or remove to remove a previous work");
     writeln("type ed or edit to edit an item");
+    printSeperator();
 }
 
 void main(){
@@ -68,7 +69,6 @@ void main(){
                 break outer;
             case "h", "help":
                 printHelp();
-                printSeperator();
 				break;
             case "cl", "clear":
                 write("\x1b[2J\x1b[H");
@@ -76,7 +76,6 @@ void main(){
                 break;
             case "ca" , "calculate":
                 dbm.calculateWork();
-                printSeperator();
                 break;
             case "pa", "print_all":
                 dbm.printAll;
@@ -84,15 +83,12 @@ void main(){
             case "re", "reload":
                 dbm.reload;
                 writeln("new settings loaded");
-                printSeperator;
                 break;
             case "add":
                 dbm.addWork;
-                printSeperator;
                 break;
             case "rm" , "remove":
                 dbm.removeWork;
-                printSeperator;
                 break;
             case "ed", "edit":
                 dbm.edit();
