@@ -459,9 +459,8 @@ DISCOUNT:
                 item = db;
                 continue;
             }
-            else if (item.object.keys.length == 1) // only break if the item only had one value 
+            else if (item.object.keys.length == 1 && item.object.keys[0] != "monjogs") // only break if the item only had one value and its not monjogs
                 break;
-            writeln(item.object.keys);
         }
         if (workNameFlag == true)
         {
@@ -473,8 +472,9 @@ DISCOUNT:
             }
             while (true)
             {
-                write("which name do you want to change: ");
+                writeln("these are the name of the works:");
                 printAll(false);
+                writeln("which name do you want to change:");
                 choice = strip(readln());
                 auto workNames = db["works"].object;
                 if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
