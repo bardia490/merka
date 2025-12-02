@@ -398,6 +398,8 @@ DISCOUNT:
         import std.string: strip;
 
         JSONValue item = db;
+        JSONValue previousItem = null;
+        int previousKey;
         bool workNameFlag = false;
         string choice;
         printSeperator();
@@ -416,7 +418,9 @@ DISCOUNT:
             }
             if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
             {
-                item = options[options.keys[to!int(choice)-1]];
+                previousItem = item;
+                previousKey = to!int(choice)-1;
+                item = options[options.keys[previousKey]];
                 if (options.keys[to!int(choice)-1] == "works")
                 {
                     write("do you want to change the name of one the " ~ makeBlue("works") ~ " (y/n): ");
@@ -436,6 +440,7 @@ DISCOUNT:
                     printSeperator;
                     continue;
                 }
+                previousItem = item;
                 item = options[choice];
                 if (choice == "works")
                 {
@@ -448,19 +453,28 @@ DISCOUNT:
                     }
                 }
             }
-            if (item.object.keys.length == 0)
+            if (item.type == JSONType.object)
             {
-                if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
-                    write(makeRed(options.keys[to!int(choice)-1]));
-                else
-                    write(makeRed(choice));
-                writeln(" was empty");
-                printSeperator();
-                item = db;
-                continue;
-            }
-            else if (item.object.keys.length == 1 && item.object.keys[0] != "monjogs") // only break if the item only had one value and its not monjogs
+                writeln("it is an object");
+                if (item.object.keys.length == 0)
+                {
+                    if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
+                        write(makeRed(options.keys[to!int(choice)-1]));
+                    else
+                        write(makeRed(choice));
+                    writeln(" was empty");
+                    printSeperator();
+                    previousItem = null;
+                    item = db;
+                    continue;
+                }
+                else if (item.object.keys.length == 1 && item.object.keys[0] != "monjogs") // only break if the item only had one value and its not monjogs
                 break;
+            }
+            else 
+            {
+                break;
+            }
         }
         if (workNameFlag == true)
         {
@@ -500,18 +514,38 @@ DISCOUNT:
             printSeperator();
             return;
         }
-        string key = item.object.keys[0];
-        writeln("the value for ", makeBlue(key), " is: ", item[key]);
-        while(true)
+        else if (item.type == JSONType.object)
         {
-            write("what do you want to change it to: ");
-            choice = strip(readln);
-            if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
+            string key = item.object.keys[0];
+            writeln("the value for ", makeBlue(key), " is: ", item[key]);
+            while(true)
             {
-                item[key] = to!int (choice);
-                writeln ("value changed successfully");
-                printSeperator();
-                break;
+                write("what do you want to change it to: ");
+                choice = strip(readln);
+                if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
+                {
+                    item[key] = to!int (choice);
+                    writeln ("value changed successfully");
+                    printSeperator();
+                    break;
+                }
+            }
+        }
+        else
+        {
+            writeln(previousKey);
+            writeln("the value for ", makeBlue(previousItem.object.keys[previousKey]), " is: ", previousItem[previousItem.object.keys[previousKey]]);
+            while(true)
+            {
+                write("what do you want to change it to: ");
+                choice = strip(readln);
+                if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
+                {
+                    previousItem[previousItem.object.keys[previousKey]] = to!int (choice);
+                    writeln ("value changed successfully");
+                    printSeperator();
+                    break;
+                }
             }
         }
         import std.file: write;
