@@ -38,7 +38,7 @@ class DataBaseManager
             contents = readText("settings/work_template.json");
         }
         db = parseJSON(contents);
-        printSeperator;
+        printSeperator();
     }
 
     bool isDataBaseEmpty() // checks to see if the data base is empty or not
@@ -95,12 +95,12 @@ class DataBaseManager
             printSeperator();
             writeln(printSpaces("mon", SPACING), "\x1b[3;31mMONJOGS\x1b[23;0m");
             writeln("monjog",printSpaces("monjog"),"count", printSpaces("count"), "price");
-            const int defaultPrice = to!int(db["codes"].object()["default"].integer);
+            const float defaultPrice = db["codes"].object()["default"].get!float;
             foreach(monjog; work.object()["monjogs"].object.keys)
             {
                 if (monjog in db["codes"]){
                     string monjogCount = to!string(work.object["monjogs"].object[monjog].integer);
-                    int monjogPrice = to!int(db["codes"][monjog].integer);
+                    float monjogPrice = db["codes"][monjog].get!float;
                     if (monjogPrice == -1)
                         monjogPrice = defaultPrice;
                     writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,prettify(monjogPrice));
@@ -125,9 +125,9 @@ class DataBaseManager
                 if (material in db["other_materials"]) 
                 {
                     auto materialCount = to!string (work["materials"].object[material].integer);
-                    const int materialCode = to!int(db["other_materials"][material].integer);
+                    string materialCode = prettify!float(db["other_materials"][material].get!float);
                     writeln(material, printSpaces(material), materialCount,
-                            printSpaces(materialCount),prettify(materialCode));
+                            printSpaces(materialCount),materialCode);
                 }
                 else 
                     writeln("\x1b[39;31m", material, " \x1b[39m is not part of the \"other_materials\"
@@ -143,7 +143,6 @@ class DataBaseManager
         import std.array: split, replicate;
         import std.conv: to;
         import std.string: strip;
-        import std.math.rounding: ceil;
 
         if(isDataBaseEmpty)
         {
@@ -167,30 +166,28 @@ class DataBaseManager
         if (!currentWorkRef)
              return false;
         auto currentWork = *currentWorkRef;
-        ulong monResults = 0; // price for monjogs
-        ulong matResults = 0; // price for materials
-        ulong tResults = 0; // the price for time
-        uint addResults = 0; // the price for additional costs
-        ulong results = 0; // the final results
-        ulong mulResults = 0; // the final results after multiplier
+        float monResults = 0; // price for monjogs
+        float matResults = 0; // price for materials
+        float tResults = 0; // the price for time
+        float addResults = 0; // the price for additional costs
+        float results = 0; // the final results
+        float mulResults = 0; // the final results after multiplier
 
         if ("monjogs" in currentWork)
         {
             printMonjog(currentWork);
-            float defaultPrice = to!float(db["codes"].object()["default"].integer);
-            float tempResults = 0;
+            float defaultPrice = db["codes"].object()["default"].get!float;
             foreach(name_, count_; currentWork["monjogs"].object)
             {
-                float ucount_ = to!float(count_.get!int); 
-                float temp = to!float(db["codes"].object[name_].get!int);
+                float ucount_ = count_.get!float; 
+                float temp = db["codes"].object[name_].get!float;
                 float price;
-                if (temp == -1)
+                if (temp == -1.)
                     price = defaultPrice;
                 else
                     price = temp;
-                tempResults += price * ucount_/175;
+                monResults += price * ucount_/175;
             }
-            monResults = tempResults.ceil.to!uint;
         }
         else 
             return false;
@@ -201,20 +198,20 @@ class DataBaseManager
             foreach(name_, count_; currentWork["materials"].object)
             {
                 uint ucount_ = count_.get!int; 
-                uint price = db["other_materials"].object[name_].get!int;
+                float price = db["other_materials"].object[name_].get!float;
                 matResults += price * ucount_;
             }
         }
 
         if ("additional_costs" in db)
         {
-            addResults = db["additional_costs"].object["price"].get!int;
+            addResults = db["additional_costs"].object["price"].get!float;
             writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
-            writeln("price",printSpaces("price"), prettify(to!int(addResults)));
+            writeln("price",printSpaces("price"), prettify!float(addResults));
         }
 
         // calculating the time
-        uint timePrice = db["time"].object["price"].get!int;
+        float timePrice = db["time"].object["price"].get!float;
         tResults = calcTime(timePrice);
 
         // finalizing the reults
@@ -248,13 +245,13 @@ DISCOUNT:
         }
 
         printSeperator();
-        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!int(monResults)));
-        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify(to!int(matResults)));
-        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify(to!int(addResults)));
-        writeln("\x1b[38;5;225mthe final price for time was: ", prettify(to!int(tResults)));
+        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify!float(monResults));
+        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify!float(matResults));
+        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify!float(addResults));
+        writeln("\x1b[38;5;225mthe final price for time was: ", prettify!float(tResults));
         writeln("\x1b[38;5;225mthe discount value was: ", multValue);
-        writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify(to!int(results)), "\x1b[0m");
-        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
+        writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify!float(results), "\x1b[0m");
+        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify!float(mulResults), "\x1b[0m");
         printSeperator();
         return true;
     }
@@ -264,8 +261,17 @@ DISCOUNT:
         import std.string;
         import std.conv: to;
         printSeperator();
-        write("please enter the name of the work: ");
-        string workName = strip(readln());
+
+        string workName = "";
+        while(true) // get the name
+        {
+            write("please enter the name of the work: ");
+            workName = strip(readln());
+            if (workName.length != 0)
+                break;
+            writeln("work name cannot be empty");
+        }
+
         db["works"].object()[workName] = JSONValue.emptyObject;
         db["works"].object()[workName].object()["monjogs"] = JSONValue.emptyObject;
         auto currentWorkMonjogs = "monjogs" in db["works"].object()[workName].object();
@@ -301,7 +307,7 @@ DISCOUNT:
                     if (!price.length) 
                         db["codes"][code] = -1;
                     else
-                        db["codes"][code] = to!int(price);
+                        db["codes"][code] = to!float(price);
                     writeln("-------------------------");
                 }
             }
@@ -340,13 +346,16 @@ DISCOUNT:
                     }
                     if (material !in db["other_materials"])
                     {
-                        write("please enter the ", makeRed("price")," for ", material, ": ");
-                        auto price = strip(readln());
-                        //if (!price.length)
-                        //    db["other_materials"][material] = -1;
-                        //else
-                        checkVariable(price, VARIABLE_CHECKER.INT);
-                        db["other_materials"][material] = to!int(price);
+                        while(true)
+                        {
+                            write("please enter the ", makeRed("price")," for ", material, ": ");
+                            auto price = strip(readln());
+                            if (checkVariable(price, VARIABLE_CHECKER.INT) || checkVariable(price, VARIABLE_CHECKER.FLOAT))
+                            {
+                                db["other_materials"][material] = to!float(price);
+                                break;
+                            }
+                        }
                     }
                 }
             }

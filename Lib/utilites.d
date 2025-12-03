@@ -73,38 +73,54 @@ bool checkVariable(string var, VARIABLE_CHECKER check, bool silent = false)
     }
 }
 
-string prettify(in int s)
+string prettify(T)(in T s)
 {
+    void prettifyAux(ref char[] s)
+    {
+        auto l = s.length;
+        while(l > 3)
+        {
+            s = s[0..l-3] ~ "," ~ s[l-3 .. $];
+            l -= 3;
+        }
+    }
     char[] s2;
 
     import std.conv: to;
+    import std.string: indexOfAny;
+    import std.array: split;
 
-       s2 = to!string(s).dup(); 
-       auto l = s2.length;
-       while(l > 3)
-       {
-           s2 = s2[0..l-3] ~ "," ~ s2[l-3 .. $];
-           l -= 3;
-       }
+    s2 = to!string(s).dup(); 
+    if (indexOfAny(s2, ".") != -1)
+    {
+        auto parts = split(s2, ".");
+        prettifyAux(parts[0]);
+        prettifyAux(parts[1]);
+        s2 = parts[0] ~ "." ~ parts[1];
+    }
+    else
+        prettifyAux(s2);
     return s2.idup();
 }
 
 void printTimeHelp() // used in calculateWork function
 {
     writeln("please enter one the following formats for time");
-    writeln("\"hours\":\"minutes\":\"seconds\"");
-    writeln("\"hours\" \"minutes\" \"seconds\"");
+    writeln("\"hours\":\"minutes\"");
+    writeln("\"hours\" \"minutes\"");
     writeln("\"hours\"h");
     writeln("\"minutes\"m");
+    writeln("\"minutes\"");
 }
 
 import std.regex: ctRegex, matchFirst;
-auto fullTimeReg = ctRegex!(`\d+:\d+:\d+`);
-auto fullTimeReg2 = ctRegex!(`\d+ \d+ \d+`);
+auto fullTimeReg = ctRegex!(`\d+:\d+`);
+auto fullTimeReg2 = ctRegex!(`\d+ \d+`);
 auto hourReg = ctRegex!(`\d+h`);
 auto minReg = ctRegex!(`\d+m`);
+auto default_ = ctRegex!(`\d+`); // default value -> minutes
 
-ulong calcTime(uint timePrice)
+float calcTime(float timePrice)
 {
     import std.string: strip;
     import std.conv: to;
@@ -113,49 +129,50 @@ ulong calcTime(uint timePrice)
     printTimeHelp();
     write("time: ");
     string duration = strip(readln());
-    ulong minutes = 0;
+    float hours = 0;
 
     auto ftr = matchFirst(duration, fullTimeReg);
     auto ftr2 = matchFirst(duration, fullTimeReg2);
     auto hr = matchFirst(duration, hourReg);
     auto mr = matchFirst(duration, minReg);
+    auto df = matchFirst(duration, default_);
     if (!ftr.empty) 
     {
         auto times = ftr[0].split(":");
-        auto h = to!ulong(times[0]);
-        auto m = to!ulong(times[1]);
-        auto s = to!ulong(times[2]);
-        if (s >= 60)
-            m += s / 60; 
-        minutes += m + h * 60;
+        auto h = to!float(times[0]);
+        auto m = to!float(times[1]);
+        hours += m / 60 + h;
     }
     else if (!ftr2.empty) 
     {
         import std.array: split;
         import std.conv: to;
         auto times = ftr2[0].split();
-        auto h = to!ulong(times[0]);
-        auto m = to!ulong(times[1]);
-        auto s = to!ulong(times[2]);
-        if (s >= 60)
-            m += s / 60; 
-        minutes += m + h * 60;
+        auto h = to!float(times[0]);
+        auto m = to!float(times[1]);
+        hours += m / 60 + h;
     }
     else if (!hr.empty)
     {
         import std.array: split;
         import std.conv: to;
         auto times = hr[0].split("h");
-        auto h = to!ulong(times[0]);
-        minutes += h * 60;
+        hours = to!float(times[0]);
     }
     else if (!mr.empty)
     {
         import std.array: split;
         import std.conv: to;
         auto times = mr[0].split("m");
-        minutes = to!ulong(times[0]);
+        hours = to!float(times[0]) / 60;
     }
 
-    return minutes * timePrice;
+    else if (!df.empty)
+    {
+        // import std.array: split;
+        import std.conv: to;
+        auto times = df[0];
+        hours = to!float(times) / 60;
+    }
+    return hours * timePrice;
 }
