@@ -1,6 +1,8 @@
 import std.stdio; 
 import std.json;
 import utilites;
+import std.conv: to;
+import std.string: strip;
 
 class DataBaseManager
 {
@@ -89,7 +91,6 @@ class DataBaseManager
 
     void printMonjog(in JSONValue work)
     {
-        import std.conv: to;
         if ("monjogs" in work)
         {
             printSeperator();
@@ -114,7 +115,6 @@ class DataBaseManager
 
     void printMaterials(in JSONValue work)
     {
-        import std.conv: to;
         if ("materials" in work)
         {
             printSeperator(); 
@@ -141,8 +141,6 @@ class DataBaseManager
     bool calculateWork()
     {
         import std.array: split, replicate;
-        import std.conv: to;
-        import std.string: strip;
 
         if(isDataBaseEmpty)
         {
@@ -244,14 +242,15 @@ DISCOUNT:
             goto DISCOUNT;
         }
 
+        import std.math.rounding: ceil;
         printSeperator();
-        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify!float(monResults));
-        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify!float(matResults));
-        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify!float(addResults));
-        writeln("\x1b[38;5;225mthe final price for time was: ", prettify!float(tResults));
+        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify!float(ceil(monResults)));
+        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify!float(ceil(matResults)));
+        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify!float(ceil(addResults)));
+        writeln("\x1b[38;5;225mthe final price for time was: ", prettify!float(ceil(tResults)));
         writeln("\x1b[38;5;225mthe discount value was: ", multValue);
-        writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify!float(results), "\x1b[0m");
-        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify!float(mulResults), "\x1b[0m");
+        writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify!float(ceil(results)), "\x1b[0m");
+        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify!float(ceil(mulResults)), "\x1b[0m");
         printSeperator();
         return true;
     }
@@ -259,7 +258,6 @@ DISCOUNT:
     void addWork()
     {
         import std.string;
-        import std.conv: to;
         printSeperator();
 
         string workName = "";
@@ -367,8 +365,6 @@ DISCOUNT:
 
     void removeWork()
     {
-        import std.string: strip;
-        import std.conv: to;
 
         printSeperator();
         if(isDataBaseEmpty)
@@ -401,163 +397,75 @@ DISCOUNT:
             printSeperator();
         }
     }
-    void edit()
+    string choseOption(string[] options) // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value 
     {
-        import std.conv: to;
-        import std.string: strip;
-
-        JSONValue item = db;
-        JSONValue previousItem = null;
-        int previousKey;
-        bool workNameFlag = false;
-        string choice;
-        printSeperator();
-        while(true)
+        import std.algorithm.searching: canFind;
+        while (true)
         {
-            writeln("available options: ");
-            auto options = item.object;
-            foreach(i, v; options.keys)
-                writeln(i+1, ": ", v);
-            write("what do you want to edit (press ENTER for exit): ");
-            choice = strip(readln());
-            if (choice.length == 0)
-            {
-                printSeperator;
-                return;
-            }
+            foreach(index, option; options)
+                writeln(index+1, ": ", option);
+            write("> ");
+            string choice = strip(readln());
             if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
             {
-                previousItem = item;
-                previousKey = to!int(choice)-1;
-                item = options[options.keys[previousKey]];
-                if (options.keys[to!int(choice)-1] == "works")
-                {
-                    write("do you want to change the name of one the " ~ makeBlue("works") ~ " (y/n): ");
-                    choice = strip(readln());
-                    if (choice == "y" || choice == "Y")
-                    {
-                        workNameFlag = true;
-                        break; // going to change the name of one the works
-                    }
-                }
+                auto key = to!int(choice);
+                if (key-1 >= 0 && key -1 < options.length)
+                    return options[key - 1];
             }
-            else
-            {
-                if (choice !in options)
-                {
-                    writeln(makeRed(choice ~ " was not found in the database"));
-                    printSeperator;
-                    continue;
-                }
-                previousItem = item;
-                item = options[choice];
-                if (choice == "works")
-                {
-                    write("do you want to change the name of one the " ~ makeBlue("works") ~ " (y/n): ");
-                    auto dummyChoice = strip(readln());
-                    if (dummyChoice == "y" || dummyChoice == "Y")
-                    {
-                        workNameFlag = true;
-                        break; // going to change the name of one the works
-                    }
-                }
-            }
-            if (item.type == JSONType.object)
-            {
-                writeln("it is an object");
-                if (item.object.keys.length == 0)
-                {
-                    if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
-                        write(makeRed(options.keys[to!int(choice)-1]));
-                    else
-                        write(makeRed(choice));
-                    writeln(" was empty");
-                    printSeperator();
-                    previousItem = null;
-                    item = db;
-                    continue;
-                }
-                else if (item.object.keys.length == 1 && item.object.keys[0] != "monjogs") // only break if the item only had one value and its not monjogs
-                break;
-            }
-            else 
-            {
-                break;
-            }
+            if (canFind(options, choice))
+                return choice;
+            writeln(makeRed("please enter a valid option inside this range:"));
         }
-        if (workNameFlag == true)
+    }
+
+    void changeJSONValue(ref JSONValue jsonval)
+    {
+        while(true)
         {
-            if (db["works"] == JSONValue.emptyObject || "works" !in db)
+            write("what do you want to change it to: ");
+            string choice = strip(readln());
+            if (checkVariable (choice, VARIABLE_CHECKER.INTEGER, true) || checkVariable (choice, VARIABLE_CHECKER.FLOAT, true))
             {
-                writeln(makeRed("there was no work in the data base"));
-                printSeperator;
-                return;
+               jsonval = to!float(choice);
+               break;
             }
-            while (true)
-            {
-                writeln("these are the name of the works:");
-                printAll(false);
-                writeln("which name do you want to change:");
-                choice = strip(readln());
-                auto workNames = db["works"].object;
-                if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
-                    choice = workNames.keys[to!int(choice)-1];
-                else
-                {
-                    if (choice !in workNames)
-                    {
-                        writeln(makeRed(choice ~ " was not found in the database"));
-                        printSeperator;
-                        continue;
-                    }
-                }
-                break;
-            }
-            write("what do you want to change " ~ makeBlue(choice) ~ " to: ");
-            string previousName = choice;
-            choice = strip(readln());
-            db["works"][choice] = db["works"][previousName];
-            db["works"].object.remove(previousName);
-            import std.file: write;
-            write("settings/works.json",db.toPrettyString());
-            printSeperator();
+            writeln(makeRed("please enter a Number"));
+        }
+    }
+    void edit()
+    {
+        writeln("what do you want to change:");
+        string[] options = ["time", "additional_costs", "codes", "other_materials"];
+        string option = choseOption(options);
+        if (!changePriceSettins(option))
             return;
-        }
-        else if (item.type == JSONType.object)
-        {
-            string key = item.object.keys[0];
-            writeln("the value for ", makeBlue(key), " is: ", item[key]);
-            while(true)
-            {
-                write("what do you want to change it to: ");
-                choice = strip(readln);
-                if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
-                {
-                    item[key] = to!int (choice);
-                    writeln ("value changed successfully");
-                    printSeperator();
-                    break;
-                }
-            }
-        }
-        else
-        {
-            writeln(previousKey);
-            writeln("the value for ", makeBlue(previousItem.object.keys[previousKey]), " is: ", previousItem[previousItem.object.keys[previousKey]]);
-            while(true)
-            {
-                write("what do you want to change it to: ");
-                choice = strip(readln);
-                if (checkVariable (choice, VARIABLE_CHECKER.INTEGER))
-                {
-                    previousItem[previousItem.object.keys[previousKey]] = to!int (choice);
-                    writeln ("value changed successfully");
-                    printSeperator();
-                    break;
-                }
-            }
-        }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
+        printSeperator();
+    }
+
+    bool changePriceSettins(string s) // s has to either be time or additional_costs
+    {
+        if (s != "time" && s != "additional_costs" && s != "codes" && s != "other_materials")
+        {
+            writeln(makeRed("not the right argument for price function"));
+            writeln("aborting operation");
+            printSeperator();
+            return false;
+        }
+        string option;
+        final switch(s)
+        {
+            case "time", "additional_costs":
+                option = "price";
+                writeln("the current ", makeBlue("price") ," set for ",s ," is: ", makeBlue(prettify!float(db[s]["price"].get!float)));
+                break;
+            case "codes", "other_materials":
+                option = choseOption(db[s].object.keys);
+                writeln("the current ", makeBlue("price") ," set for ", makeBlue(option) ," is: ", makeBlue(prettify!float(db[s][option].get!float)));
+                break;
+        }
+        changeJSONValue(db[s][option]);
+        return true;
     }
 }
