@@ -100,7 +100,7 @@ class DataBaseManager
             foreach(monjog; work.object()["monjogs"].object.keys)
             {
                 if (monjog in db["codes"]){
-                    string monjogCount = to!string(work.object["monjogs"].object[monjog].integer);
+                    string monjogCount = prettify!int(to!uint(work.object["monjogs"].object[monjog].get!float));
                     float monjogPrice = db["codes"][monjog].get!float;
                     if (monjogPrice == -1)
                         monjogPrice = defaultPrice;
@@ -124,7 +124,7 @@ class DataBaseManager
             {
                 if (material in db["other_materials"]) 
                 {
-                    auto materialCount = to!string (work["materials"].object[material].integer);
+                    auto materialCount = prettify!int (to!uint(work["materials"].object[material].get!float));
                     string materialCode = prettify!float(db["other_materials"][material].get!float);
                     writeln(material, printSpaces(material), materialCount,
                             printSpaces(materialCount),materialCode);
@@ -397,7 +397,9 @@ DISCOUNT:
             printSeperator();
         }
     }
-    string choseOption(string[] options) // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value 
+    string choseOption(string[] options) 
+     // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value 
+     // returns the value in the list
     {
         import std.algorithm.searching: canFind;
         while (true)
@@ -418,7 +420,30 @@ DISCOUNT:
         }
     }
 
-    void changeJSONValue(ref JSONValue jsonval)
+    long choseOptionIndex(string[] options) 
+     // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value
+     // returns the index of the option in the list
+    {
+        import std.algorithm.searching: countUntil;
+        while (true)
+        {
+            foreach(index, option; options)
+                writeln(index+1, ": ", option);
+            write("> ");
+            string choice = strip(readln());
+            if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
+            {
+                auto key = to!long(choice);
+                if (key-1 >= 0 && key -1 < options.length)
+                    return key - 1;
+            }
+            auto step = countUntil(options, choice);
+            if (step)
+                return step;
+            writeln(makeRed("please enter a valid option inside this range:"));
+        }
+    }
+    void updateJSONValue(ref JSONValue jsonval)
     {
         while(true)
         {
@@ -432,18 +457,57 @@ DISCOUNT:
             writeln(makeRed("please enter a Number"));
         }
     }
+    void changeJSONOjectName(ref JSONValue jsonval, string previousName) // , string lastName, string newName
+    {
+        while(true)
+        {
+            write("what do you want to change it to: ");
+            string choice = strip(readln());
+            if (choice != "")
+            {
+                JSONValue dummyVar = jsonval[previousName];
+                jsonval.object.remove(previousName);
+                jsonval[choice] = dummyVar;
+                break;
+            }
+            writeln(makeRed("please enter something"));
+        }
+    }
     void edit()
     {
         writeln("what do you want to change:");
-        string[] options = ["time", "additional_costs", "codes", "other_materials"];
-        string option = choseOption(options);
-        if (!changePriceSettins(option))
-            return;
+        string[] options = ["time",
+                            "additional_costs",
+                            "codes",
+                            "other_materials",
+                            "workName",
+                            "changeMaterial",
+                            "changeMonjogs"];
+        string[] longOptions = ["change the price for each hour",
+                                "change the additional costs",
+                                "change the price for a monjog",
+                                "change the price of some material",
+                                "change the name of a work",
+                                "change something about materials in a work",
+                                "change something about monjogs in a work"];
+        string option = options[choseOptionIndex(longOptions)];
+
+        final switch (option)
+        {
+            case "time", "additional_costs", "codes", "other_materials":
+                if (!changePriceSettins(option))
+                    return;
+                break;
+            case "workName", "changeMaterial", "changeMonjogs":
+                if (!changeWorkSettins(option))
+                    return;
+                break;
+        }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
+        writeln("operation was succesfull");
         printSeperator();
     }
-
     bool changePriceSettins(string s) // s has to either be time or additional_costs
     {
         if (s != "time" && s != "additional_costs" && s != "codes" && s != "other_materials")
@@ -461,11 +525,74 @@ DISCOUNT:
                 writeln("the current ", makeBlue("price") ," set for ",s ," is: ", makeBlue(prettify!float(db[s]["price"].get!float)));
                 break;
             case "codes", "other_materials":
+                printSeperator();
+                writeln("please chose one of the below items");
                 option = choseOption(db[s].object.keys);
                 writeln("the current ", makeBlue("price") ," set for ", makeBlue(option) ," is: ", makeBlue(prettify!float(db[s][option].get!float)));
                 break;
         }
-        changeJSONValue(db[s][option]);
+        updateJSONValue(db[s][option]);
+        return true;
+    }
+    bool changeWorkSettins(string s) // s has to either be either workName or changeMaterial or changeMonjogs
+    {
+        if (s != "workName" && s != "changeMaterial" && s != "changeMonjogs")
+        {
+            writeln(makeRed("not the right argument for the work function"));
+            writeln("aborting operation");
+            printSeperator();
+            return false;
+        }
+        
+        printSeperator();
+        writeln("please chose a work");
+        string option = choseOption(db["works"].object.keys);
+        final switch(s)
+        {
+            case "workName":
+                changeJSONOjectName(db["works"], option);
+                break;
+            case "changeMaterial":
+                if ("materials" !in db["works"][option])
+                {
+                    writeln("sorry this work doesn't have any materials");
+                    printSeperator();
+                    return false;
+                }
+                printSeperator();
+                writeln("please chose one of the below options");
+                string[2] options = ["materialCount", "materialName"];
+                string[2] longOptions = ["change the number of some material in this work",
+                                         "change the name of some material in this work"];
+                string newOption = options[choseOptionIndex(longOptions)];
+                writeln("which material:");
+                string name = choseOption(db["works"][option]["materials"].object.keys);
+                if (newOption == "materialCount")
+                {
+                    writeln("the previous value is: ", makeBlue(prettify!float(db["works"][option]["materials"][name].get!float)));
+                    updateJSONValue(db["works"][option]["materials"][name]);
+                }
+                if (newOption == "materialName")
+                    changeJSONOjectName(db["works"][option]["materials"], name);
+                break;
+            case "changeMonjogs":
+                printSeperator();
+                writeln("please chose one of the below options");
+                string[2] options = ["monjogCount", "monjogName"];
+                string[2] longOptions = ["change the number of some monjog in this work",
+                                         "change the name of some monjog in this work"];
+                string newOption = options[choseOptionIndex(longOptions)];
+                writeln("which monjog:");
+                string name = choseOption(db["works"][option]["monjogs"].object.keys);
+                if (newOption == "monjogCount")
+                {
+                    writeln("the previous value is: ", makeBlue(prettify!float(db["works"][option]["monjogs"][name].get!float)));
+                    updateJSONValue(db["works"][option]["monjogs"][name]);
+                }
+                if (newOption == "monjogName")
+                    changeJSONOjectName(db["works"][option]["materials"], name);
+                break;
+        }
         return true;
     }
 }
