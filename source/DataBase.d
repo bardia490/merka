@@ -104,7 +104,7 @@ class DataBaseManager
                     float monjogPrice = db["codes"][monjog].get!float;
                     if (monjogPrice == -1)
                         monjogPrice = defaultPrice;
-                    writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,prettify(monjogPrice));
+                    writeln(monjog,printSpaces(monjog),monjogCount,printSpaces(monjogCount) ,prettify(to!uint(monjogPrice)));
                 }
                 else 
                     writeln("\x1b[39;31m", monjog, " \x1b[39m is not part of the \"codes\" group 
@@ -125,9 +125,9 @@ class DataBaseManager
                 if (material in db["other_materials"]) 
                 {
                     auto materialCount = prettify!int (to!uint(work["materials"].object[material].get!float));
-                    string materialCode = prettify!float(db["other_materials"][material].get!float);
+                    string materialPrice = prettify!float(to!uint(db["other_materials"][material].get!float));
                     writeln(material, printSpaces(material), materialCount,
-                            printSpaces(materialCount),materialCode);
+                            printSpaces(materialCount),materialPrice);
                 }
                 else 
                     writeln("\x1b[39;31m", material, " \x1b[39m is not part of the \"other_materials\"
