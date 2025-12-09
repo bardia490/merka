@@ -24,19 +24,21 @@ void printNameArt()
     writeln(s);
 }
 
+// TODO: make this look nicer
 void printHelp()
 {
     writeln("application help:");
-    writeln("type q or quit anytime to quit the app");
-    writeln("type h anytime to see the help");
-    //writeln("type a or all to see all the reports so far");
-    writeln("type cl or clear to clear the screen");
-    writeln("type ca or calculate to calculate the price for a work");
-    writeln("type pa or print_all to print all the works");
-    writeln("type re or reload to reload the contents of the settings file");
-    writeln("type add to add a new work");
-    writeln("type rm or remove to remove a previous work");
-    writeln("type ed or edit to edit an item");
+    writeln("type ", makeBlue("q"),"   or ", makeBlue("quit"), "       to quit the app");
+    writeln("type ", makeBlue("h"),"   or ", makeBlue("help"), "       to see the help");
+    //writeln("type a or all to seeal  l the reports so far");
+    writeln("type ", makeBlue("cl"),"  or ", makeBlue("clear"), "      to clear the screen");
+    writeln("type ", makeBlue("ca"),"  or ", makeBlue("calculate"), "  to calculate the price for a work");
+    writeln("type ", makeBlue("pa"),"  or ", makeBlue("print_all"), "  to print all the works");
+    writeln("type ", makeBlue("pr"),"  or ", makeBlue("print_work"), " to print a specific work");
+    writeln("type ", makeBlue("re"),"  or ", makeBlue("reload"), "     to reload the contents of the settings file");
+    writeln("type ", makeBlue("add")," or ", makeBlue("add_work"), "   to add a new work");
+    writeln("type ", makeBlue("rm") ,"  or ", makeBlue("remove"), "     to remove a previous work");
+    writeln("type ", makeBlue("ed") ,"  or ", makeBlue("edit"), "       to edit an item");
     printSeperator();
 }
 
@@ -65,20 +67,23 @@ void main(){
         import std.array: replicate;
         switch (user_input) {
             case "q", "quit":
-                printSeperator();
+                printSeperator;
                 break outer;
             case "h", "help":
-                printHelp();
+                printHelp;
 				break;
             case "cl", "clear":
                 write("\x1b[2J\x1b[H");
-                stdout.flush();
+                stdout.flush;
                 break;
             case "ca" , "calculate":
-                dbm.calculateWork();
+                dbm.calculateWork;
                 break;
             case "pa", "print_all":
                 dbm.printAll;
+                break;
+            case "pr", "print_work":
+                dbm.printWork; // use the no argument printWork function
                 break;
             case "re", "reload":
                 dbm.reload;

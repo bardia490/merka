@@ -78,6 +78,11 @@ class DataBaseManager
             printWork(work);
     }
 
+    void printWork() // for print_work option in main
+    {
+        string[] workNames = db["works"].object.keys;
+        printWork(choseOption(workNames));
+    }
     void printWork(string workName)
     {
         import std.array: replicate;
@@ -87,6 +92,7 @@ class DataBaseManager
         writeln("\x1b[0;34m",replicate("<>", MDASHCOUNT/2), "\x1b[0;34m");
         printMonjog(work);
         printMaterials(work);
+        printWorkTime(work);
     }
 
     void printMonjog(in JSONValue work)
@@ -110,6 +116,7 @@ class DataBaseManager
                     writeln("\x1b[39;31m", monjog, " \x1b[39m is not part of the \"codes\" group 
                     in the \"",dataBasePath,"\" file");
             }
+            printSeperator(); 
         }
     }
 
@@ -117,7 +124,6 @@ class DataBaseManager
     {
         if ("materials" in work)
         {
-            printSeperator(); 
             writeln(printSpaces("mate", SPACING), "\x1b[3;31mMATERIALS\x1b[23;0m");
             writeln("material",printSpaces("material"),"count",printSpaces("count"),"price");
             foreach(material; work.object["materials"].object.keys)
@@ -134,8 +140,24 @@ class DataBaseManager
                             group in the ", dataBasePath," file");
 
             }
+            printSeperator();
         }
-        printSeperator();
+    }
+
+    void printWorkTime(in JSONValue work)
+    {
+        if ("time" in work)
+        {
+            writeln(printSpaces("ti", SPACING), "\x1b[3;31mTime\x1b[23;0m");
+            writeln("minutes",printSpaces("minutes"),"hours",printSpaces("hours"),"price");
+            auto hours = work["time"].get!float;
+            auto stringHours = prettify!float(hours);
+            auto stringMinutes = prettify!int(to!uint(hours*60));
+            string timePrice = prettify!float(to!uint(db["time"]["price"].get!float * hours));
+            writeln(stringMinutes, printSpaces(stringMinutes), stringHours,
+                    printSpaces(stringHours), timePrice);
+            printSeperator();
+        }
     }
 
     bool calculateWork()
@@ -149,17 +171,11 @@ class DataBaseManager
             return false;
         }
 
-        writeln("this is the list of all works");
-        printAll(false); // only print the names of the works
-        write("please enter the number for the work: ");
+        writeln("this is the list of all the works");
 
-        auto workName = strip(readln());
         string[] workNames = db["works"].object.keys;
+        auto workName = choseOption(workNames, "Please choose on of the works below"); // returns the work name as string
 
-        if(checkVariable(workName, VARIABLE_CHECKER.INT, true)) // check if it is entered as number
-        {
-            workName = workNames[to!int(workName) - 1]; // convert to name
-        }
         auto currentWorkRef = workName in db["works"];
         if (!currentWorkRef)
              return false;
@@ -206,17 +222,26 @@ class DataBaseManager
             addResults = db["additional_costs"].object["price"].get!float;
             writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
             writeln("price",printSpaces("price"), prettify!float(addResults));
+            printSeperator();
         }
 
         // calculating the time
         float timePrice = db["time"].object["price"].get!float;
-        tResults = calcTime(timePrice);
+        if ("time" in currentWork) // if time is already set
+        {
+            printWorkTime(currentWork);
+            tResults = currentWork["time"].get!float;
+        }
+        else
+        {
+            tResults = calcTime(timePrice);
+            printSeperator();
+        }
 
         // finalizing the reults
         results = monResults + matResults + tResults + addResults;
 
         // checking for discount
-        printSeperator();
         write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER, e.g. 25 or 125): ");
         uint multValue; // the multiplier
 DISCOUNT:
@@ -311,9 +336,9 @@ DISCOUNT:
             }
         }
         printSeperator();
-        write("do you want to add new materials (such as aviz) to work ", workName, " (y/n): ");
+        write("do you want to add new materials (such as aviz) to work ", workName, " (ENTER for NO): ");
         auto answer = strip(readln());
-        if (answer == "y" || answer == "yes")
+        if (answer != "")
         {
             db["works"].object()[workName].object()["materials"] = JSONValue.emptyObject;
             auto currentWorkMaterials = "materials" in db["works"].object()[workName].object(); // for storing the new materials
@@ -358,8 +383,20 @@ DISCOUNT:
                 }
             }
         }
+        printSeperator();
+        write("do you want to set time for ", workName, " (ENTER for NO, h to also see time help): ");
+        answer = strip(readln());
+        if (answer == "h" || answer == "help")
+        {
+            db["works"].object()[workName].object()["time"] = getTime(); // stores time as hour (float)
+        }
+        else if (answer != "")
+        {
+            db["works"].object()[workName].object()["time"] = getTime(false, answer); // stores time as hour (float)
+        }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
+        writeln("WORK ADDED SUCCESFULLY");
         printSeperator();
     }
 
@@ -397,13 +434,19 @@ DISCOUNT:
             printSeperator();
         }
     }
-    string choseOption(string[] options) 
-     // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value 
+    string choseOption(string[] options, string question = "")
+     // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value, question is what you want to be asked before asking for a option
      // returns the value in the list
     {
+        import std.array: replicate;
+
         import std.algorithm.searching: canFind;
         while (true)
         {
+            write("\x1b[38;5;166m");
+            writeln(replicate("<>", MDASHCOUNT/2));
+            write("\x1b[38;5;231m");
+            writeln(question);
             foreach(index, option; options)
                 writeln(index+1, ": ", option);
             write("> ");
@@ -412,7 +455,12 @@ DISCOUNT:
             {
                 auto key = to!int(choice);
                 if (key-1 >= 0 && key -1 < options.length)
+                {
+                    write("\x1b[38;5;166m");
+                    writeln(replicate("<>", MDASHCOUNT/2));
+                    write("\x1b[38;5;231m");
                     return options[key - 1];
+                }
             }
             if (canFind(options, choice))
                 return choice;

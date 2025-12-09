@@ -120,15 +120,22 @@ auto hourReg = ctRegex!(`\d+h`);
 auto minReg = ctRegex!(`\d+m`);
 auto default_ = ctRegex!(`\d+`); // default value -> minutes
 
-float calcTime(float timePrice)
+float getTime(bool help = true, string _duration = "")
 {
     import std.string: strip;
     import std.conv: to;
     // finding the time format
-    writeln(replicate("\&mdash;",MDASHCOUNT)); 
-    printTimeHelp();
-    write("time: ");
-    string duration = strip(readln());
+    printSeperator();
+    string duration;
+    if (help)
+        printTimeHelp();
+    if (_duration != "")
+        duration = _duration;
+    else
+    {
+        write("time: ");
+        duration = strip(readln());
+    }
     float hours = 0;
 
     auto ftr = matchFirst(duration, fullTimeReg);
@@ -174,5 +181,10 @@ float calcTime(float timePrice)
         auto times = df[0];
         hours = to!float(times) / 60;
     }
-    return hours * timePrice;
+    return hours;
+}
+
+float calcTime(float timePrice)
+{
+    return getTime() * timePrice;
 }
