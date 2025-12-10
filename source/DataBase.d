@@ -238,29 +238,19 @@ class DataBaseManager
         results = monResults + matResults + tResults + addResults;
 
         // checking for discount
-        write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER, e.g. 25 or 125): ");
-        uint multValue; // the multiplier
-DISCOUNT:
-        try
+        write("do you want to multiply the results by a value
+                (if not you can enter 0 or ENTER, e.g. 1.25 or 0.75): ");
+        string choice = strip(readln());
+        uint multValue;
+        if(choice.length != 0)
         {
-            string choice = strip(readln());
-            if(choice.length != 0)
-            {
+            if (checkVariable(choice, VARIABLE_CHECKER.INT))
                 multValue = to!uint(choice);
-                if (multValue <= 100)
-                    mulResults = (100-multValue) * results / 100;
-                else
-                    mulResults = multValue * results / 100;
-            }
-            else
-            {
-                mulResults = results;
-            }
+            mulResults = multValue * results;
         }
-        catch(Exception)
+        else
         {
-            writeln("please enter a number!");
-            goto DISCOUNT;
+            mulResults = results;
         }
 
         printSeperator();
@@ -274,6 +264,7 @@ DISCOUNT:
         printSeperator();
         return true;
     }
+
 
     void addWork()
     {
@@ -290,9 +281,9 @@ DISCOUNT:
             writeln("work name cannot be empty");
         }
 
-        db["works"].object()[workName] = JSONValue.emptyObject;
-        db["works"].object()[workName].object()["monjogs"] = JSONValue.emptyObject;
-        auto currentWorkMonjogs = "monjogs" in db["works"].object()[workName].object();
+        db["works"][workName] = JSONValue.emptyObject;
+        db["works"][workName]["monjogs"] = JSONValue.emptyObject;
+        auto currentWorkMonjogs = "monjogs" in db["works"][workName].object();
         while(true)
         {
             write("please enter the (next) monjog code(s) or press Enter to finish adding monjogs: ");
@@ -304,7 +295,7 @@ DISCOUNT:
 
             foreach(code; codes)
             {
-                write("please enter the ",makeRed("number")," of monjogs for code ", code, ": ");
+                write("please enter the ",makeBlue("number")," of monjogs for code ", code, ": ");
                 while(true)
                 {
                     auto codeCountStr = strip(readln());
@@ -315,12 +306,12 @@ DISCOUNT:
                         (*currentWorkMonjogs)[code] = codeCount;
                         break;
                     }
-                    write("please enter the ", makeRed("number"), " of monjogs for code ", code, ": ");
+                    write("please enter the ", makeBlue("number"), " of monjogs for code ", code, ": ");
                 }
                 writeln("-------------------------");
                 if (code !in db["codes"])
                 {
-                    write("please enter the ", makeRed("price"), " for ", code ," monjog (press Enter for default): ");
+                    write("please enter the ", makeBlue("price"), " for ", code ," monjog (press Enter for default): ");
                     auto price = strip(readln());
                     if (!price.length) 
                         db["codes"][code] = -1;
