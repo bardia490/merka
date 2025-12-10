@@ -43,6 +43,7 @@ enum VARIABLE_CHECKER
 {
     INT,
     INTEGER,
+    UINT,
     FLOAT
 }
 
@@ -70,6 +71,47 @@ bool checkVariable(string var, VARIABLE_CHECKER check, bool silent = false)
         if (!silent)
             writeln("\x1B[1;31msorry could not convert ", var, " to ", check, "\x1B[0m");
         return false;
+    }
+}
+
+union Results(T)
+{
+    ubyte status; // returns a number on failure
+    T result; // returns the value with type T
+}
+
+// on failure returns 0
+Results!(T) checkVariable(T)(string var, bool silent = false)
+{
+    import std.conv: to;
+    Results!(T) r;
+    try
+    {
+        r.results = to!T(var);
+        return r;
+    }
+    catch (Exception)
+    {
+        if (!silent)
+            writeln("\x1B[1;31msorry could not convert ", var, " to ", "TODO...", "\x1B[0m");
+        return r.status = 0;
+    }
+}
+
+T getAnswer(T)(string question = "", bool function(T t) condition = {return true;})
+{
+    import std.string: strip, readln;
+    writeln(question);
+    string answer = strip(readln());
+    while(true)
+    {
+        if (answer != "")
+        {
+            Results!T r = checkVariable!T(answer, true);
+            if (r.status)
+                if (condition(r.result))
+                    return r.result;
+        }
     }
 }
 
