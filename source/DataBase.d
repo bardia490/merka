@@ -208,10 +208,9 @@ class DataBaseManager
         if ("materials" in currentWork)
         {
             printMaterials(currentWork);
-            // float defaultPrice = to!float(db["codes"].object()["default"].integer);
             foreach(name_, count_; currentWork["materials"].object)
             {
-                uint ucount_ = count_.get!int; 
+                float ucount_ = count_.get!float;
                 float price = db["other_materials"].object[name_].get!float;
                 matResults += price * ucount_;
             }
@@ -230,13 +229,10 @@ class DataBaseManager
         if ("time" in currentWork) // if time is already set
         {
             printWorkTime(currentWork);
-            tResults = currentWork["time"].get!float;
+            tResults = currentWork["time"].get!float * timePrice;
         }
         else
-        {
             tResults = calcTime(timePrice);
-            printSeperator();
-        }
 
         // finalizing the reults
         results = monResults + matResults + tResults + addResults;
@@ -267,15 +263,14 @@ DISCOUNT:
             goto DISCOUNT;
         }
 
-        import std.math.rounding: ceil;
         printSeperator();
-        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify!float(ceil(monResults)));
-        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify!float(ceil(matResults)));
-        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify!float(ceil(addResults)));
-        writeln("\x1b[38;5;225mthe final price for time was: ", prettify!float(ceil(tResults)));
+        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!uint(monResults)));
+        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify(to!int(matResults)));
+        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify(to!int(addResults)));
+        writeln("\x1b[38;5;225mthe final price for time was: ", prettify(to!int(tResults)));
         writeln("\x1b[38;5;225mthe discount value was: ", multValue);
-        writeln("\x1b[38;5;134mthe price (whithout discount) is: ", prettify!float(ceil(results)), "\x1b[0m");
-        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify!float(ceil(mulResults)), "\x1b[0m");
+        writeln("\x1b[38;5;134mthe price (without discount) is: ", prettify(to!int(results)), "\x1b[0m");
+        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
         printSeperator();
         return true;
     }

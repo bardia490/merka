@@ -105,7 +105,7 @@ string prettify(T)(in T s)
 
 void printTimeHelp() // used in calculateWork function
 {
-    writeln("please enter one the following formats for time");
+    writeln("please enter one the following formats for ", makeBlue("time"));
     writeln("\"hours\":\"minutes\"");
     writeln("\"hours\" \"minutes\"");
     writeln("\"hours\"h");
@@ -125,8 +125,8 @@ float getTime(bool help = true, string _duration = "")
     import std.string: strip;
     import std.conv: to;
     // finding the time format
-    printSeperator();
     string duration;
+START:
     if (help)
         printTimeHelp();
     if (_duration != "")
@@ -180,6 +180,12 @@ float getTime(bool help = true, string _duration = "")
         import std.conv: to;
         auto times = df[0];
         hours = to!float(times) / 60;
+    }
+    else 
+    {
+        writeln(makeRed("what you entered does not match any of the time formats!\nplease try again"));
+        printSeperator;
+        goto START;
     }
     return hours;
 }
