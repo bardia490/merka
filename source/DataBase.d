@@ -256,7 +256,7 @@ class DataBaseManager
             string choice = strip(readln());
             if(choice.length != 0 || choice == "0")
             {
-                if (checkVariable(choice, VARIABLE_CHECKER.Float))
+                if (checkVariable(choice, VARIABLE_CHECKER.FLOAT))
                     multValue = to!uint(choice);
                 mulResults = multValue * results;
             }
