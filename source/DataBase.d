@@ -322,48 +322,43 @@ class DataBaseManager
             }
         }
         printSeperator();
-        write("do you want to add new materials (such as aviz) to work ", workName, " (ENTER for NO): ");
-        auto answer = strip(readln());
-        if (answer != "")
+        db["works"].object()[workName].object()["materials"] = JSONValue.emptyObject;
+        auto currentWorkMaterials = "materials" in db["works"].object()[workName].object(); // for storing the new materials
+
+        while(true)
         {
-            db["works"].object()[workName].object()["materials"] = JSONValue.emptyObject;
-            auto currentWorkMaterials = "materials" in db["works"].object()[workName].object(); // for storing the new materials
+            write("please enter the material name(s) or press Enter to finish adding materials: ");
 
-            while(true)
+            import std.array: split;
+            auto materialNames = split(strip(readln()));
+
+            if (!materialNames.length) break;
+
+            foreach(material; materialNames)
             {
-                write("please enter the material name(s) or press Enter to finish adding materials: ");
-
-                import std.array: split;
-                auto materialNames = split(strip(readln()));
-
-                if (!materialNames.length) break;
-
-                foreach(material; materialNames)
+                write("please enter the ", makeRed("number"), " of ", material, ": ");
+                while(true)
                 {
-                    write("please enter the ", makeRed("number"), " of ", material, ": ");
+                    auto materialCountStr = strip(readln());
+                    int materialCount = 0;
+                    if (checkVariable(materialCountStr, VARIABLE_CHECKER.INT))
+                    {
+                        materialCount = to!int(materialCountStr);
+                        (*currentWorkMaterials)[material] = materialCount;
+                        break;
+                    }
+                    write("please enter the ", makeRed("amount"), " of material for ", material, ": ");
+                }
+                if (material !in db["other_materials"])
+                {
                     while(true)
                     {
-                        auto materialCountStr = strip(readln());
-                        int materialCount = 0;
-                        if (checkVariable(materialCountStr, VARIABLE_CHECKER.INT))
+                        write("please enter the ", makeRed("price")," for ", material, ": ");
+                        auto price = strip(readln());
+                        if (checkVariable(price, VARIABLE_CHECKER.INT) || checkVariable(price, VARIABLE_CHECKER.FLOAT))
                         {
-                            materialCount = to!int(materialCountStr);
-                            (*currentWorkMaterials)[material] = materialCount;
+                            db["other_materials"][material] = to!float(price);
                             break;
-                        }
-                        write("please enter the ", makeRed("amount"), " of material for ", material, ": ");
-                    }
-                    if (material !in db["other_materials"])
-                    {
-                        while(true)
-                        {
-                            write("please enter the ", makeRed("price")," for ", material, ": ");
-                            auto price = strip(readln());
-                            if (checkVariable(price, VARIABLE_CHECKER.INT) || checkVariable(price, VARIABLE_CHECKER.FLOAT))
-                            {
-                                db["other_materials"][material] = to!float(price);
-                                break;
-                            }
                         }
                     }
                 }
@@ -371,7 +366,7 @@ class DataBaseManager
         }
         printSeperator();
         write("do you want to set time for ", workName, " (ENTER for NO, h to also see time help): ");
-        answer = strip(readln());
+        string answer = strip(readln());
         if (answer == "h" || answer == "help")
         {
             db["works"].object()[workName].object()["time"] = getTime(); // stores time as hour (float)
@@ -477,12 +472,22 @@ class DataBaseManager
             writeln(makeRed("please enter a valid option inside this range:"));
         }
     }
-    void updateJSONValue(ref JSONValue jsonval)
+    void updateJSONValue(ref JSONValue jsonval, in float defaultValue = 0)
     {
         while(true)
         {
-            write("what do you want to change it to: ");
+            write("what do you want to change it to: (ENTER for default)");
             string choice = strip(readln());
+            if (choice == "")
+            {
+                if (defaultValue != 0)
+                {
+                    jsonval = defaultValue;
+                    break;
+                }
+                else
+                    continue;
+            }
             if (checkVariable (choice, VARIABLE_CHECKER.INTEGER, true) || checkVariable (choice, VARIABLE_CHECKER.FLOAT, true))
             {
                jsonval = to!float(choice);
@@ -491,7 +496,7 @@ class DataBaseManager
             writeln(makeRed("please enter a Number"));
         }
     }
-    void changeJSONOjectName(ref JSONValue jsonval, string previousName) // , string lastName, string newName
+    void changeJSONObjectName(ref JSONValue jsonval, string previousName) // , string lastName, string newName
     {
         while(true)
         {
@@ -552,6 +557,7 @@ class DataBaseManager
             return false;
         }
         string option;
+        float defaultValue = 0;
         final switch(s)
         {
             case "time", "additional_costs":
@@ -560,11 +566,12 @@ class DataBaseManager
                 break;
             case "codes", "other_materials":
                 printSeperator();
-                writeln("please chose one of the below items");
-                option = choseOption(db[s].object.keys);
+                option = choseOption(db[s].object.keys, "please chose one of the below items");
                 writeln("the current ", makeBlue("price") ," set for ", makeBlue(option) ," is: ", makeBlue(prettify!float(db[s][option].get!float)));
                 break;
         }
+        if (s == "codes")
+            defaultValue = db["codes"]["default"].get!float ;
         updateJSONValue(db[s][option]);
         return true;
     }
@@ -579,12 +586,11 @@ class DataBaseManager
         }
         
         printSeperator();
-        writeln("please chose a work");
-        string option = choseOption(db["works"].object.keys);
+        string option = choseOption(db["works"].object.keys, "please chose a work");
         final switch(s)
         {
             case "workName":
-                changeJSONOjectName(db["works"], option);
+                changeJSONObjectName(db["works"], option);
                 break;
             case "changeMaterial":
                 if ("materials" !in db["works"][option])
@@ -599,15 +605,14 @@ class DataBaseManager
                 string[2] longOptions = ["change the number of some material in this work",
                                          "change the name of some material in this work"];
                 string newOption = options[choseOptionIndex(longOptions)];
-                writeln("which material:");
-                string name = choseOption(db["works"][option]["materials"].object.keys);
+                string name = choseOption(db["works"][option]["materials"].object.keys, "which material:");
                 if (newOption == "materialCount")
                 {
                     writeln("the previous value is: ", makeBlue(prettify!float(db["works"][option]["materials"][name].get!float)));
                     updateJSONValue(db["works"][option]["materials"][name]);
                 }
                 if (newOption == "materialName")
-                    changeJSONOjectName(db["works"][option]["materials"], name);
+                    changeJSONObjectName(db["works"][option]["materials"], name);
                 break;
             case "changeMonjogs":
                 printSeperator();
@@ -616,15 +621,14 @@ class DataBaseManager
                 string[2] longOptions = ["change the number of some monjog in this work",
                                          "change the name of some monjog in this work"];
                 string newOption = options[choseOptionIndex(longOptions)];
-                writeln("which monjog:");
-                string name = choseOption(db["works"][option]["monjogs"].object.keys);
+                string name = choseOption(db["works"][option]["monjogs"].object.keys, "which monjog:");
                 if (newOption == "monjogCount")
                 {
                     writeln("the previous value is: ", makeBlue(prettify!float(db["works"][option]["monjogs"][name].get!float)));
                     updateJSONValue(db["works"][option]["monjogs"][name]);
                 }
                 if (newOption == "monjogName")
-                    changeJSONOjectName(db["works"][option]["materials"], name);
+                    changeJSONObjectName(db["works"][option]["materials"], name);
                 break;
         }
         return true;
