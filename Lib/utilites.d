@@ -80,41 +80,83 @@ union Results(T)
     T result; // returns the value with type T
 }
 
+// checks to see if the variable can be converted to the desired type (T)
+// on success the Results(T) union holds the final value
 // on failure returns 0
 Results!(T) checkVariable(T)(string var, bool silent = false)
 {
     import std.conv: to;
     Results!(T) r;
     try
-    {
-        r.results = to!T(var);
-        return r;
-    }
+        r.result = to!T(var);
     catch (Exception)
     {
         if (!silent)
             writeln("\x1B[1;31msorry could not convert ", var, " to ", "TODO...", "\x1B[0m");
-        return r.status = 0;
+        r.status = 0;
     }
+    return r;
 }
 
-T getAnswer(T)(string question = "", bool function(T t) condition = {return true;})
+// get the answer based on the condition
+// the question is the question that will be asked before waiting for input
+// the q_condition is a function that takes the parameter of the type string (the same type as question)
+// and is checked together with the final value condition
+// the condition is a function that takes the parameter of the same type as the return value (T)
+// and returns true if it meets its criteria
+// if error_message is set to a non empty string it prints the error_message after every wrong input
+// if error_message is set to a empty string it prints the default error message
+// if print_sep is set to true it prints the seperator before the question every time
+T getAnswer(T)(string question = "", bool function(string s) q_condition, bool function(T t) condition, string error_message = "", bool print_sep = false)
 {
-    import std.string: strip, readln;
-    writeln(question);
-    string answer = strip(readln());
+    import std.string: strip;
     while(true)
     {
-        if (answer != "")
-        {
-            Results!T r = checkVariable!T(answer, true);
-            if (r.status)
-                if (condition(r.result))
-                    return r.result;
-        }
+        if (print_sep)
+            printSeperator;
+        writeln(question);
+        write("> ");
+        string answer = strip(readln());
+
+        Results!T r = checkVariable!T(answer, true);
+        if (q_condition(answer) && r.status != 0 && condition(r.result))
+            return r.result;
+
+        if (error_message != "")
+            writeln(makeRed(error_message));
+        else
+            writeln(makeRed("WRONG INPUT"));
     }
 }
 
+// like getAnswer but if the answer is empty it returns the default value
+// the default value and question are mandatory in this function
+T getAnswer(T)(string question, bool function(T t) condition, T default_, string error_message = "", bool print_sep = false)
+{
+    import std.string: strip;
+
+    Results!T r;
+    while(true)
+    {
+        if (print_sep)
+            printSeperator;
+        writeln(question);
+        write("> ");
+        string answer = strip(readln());
+
+        if (answer == "")
+            return default_;
+
+        r = checkVariable!T(answer, true);
+        if (r.status != 0 && condition(r.result))
+            return r.result;
+
+        if (error_message != "")
+            writeln(makeRed(error_message));
+        else
+            writeln(makeRed("WRONG INPUT"));
+    }
+}
 string prettify(T)(in T s)
 {
     void prettifyAux(ref char[] s)
@@ -174,10 +216,7 @@ START:
     if (_duration != "")
         duration = _duration;
     else
-    {
-        write("time: ");
-        duration = strip(readln());
-    }
+        duration = getAnswer!string(makeBlue("time:"), (s) {return s!= "";}, (_) {return true;}, "PLEASE ENTER SOMETHING" ,true); // make sure the string is not empty the rest is handled true regexes
     float hours = 0;
 
     auto ftr = matchFirst(duration, fullTimeReg);

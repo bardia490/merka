@@ -27,6 +27,7 @@ class DataBaseManager
         }
         printSeperator();
     }
+
     void reload()
     {
         import std.file: readText, exists;
@@ -83,6 +84,7 @@ class DataBaseManager
         string[] workNames = db["works"].object.keys;
         printWork(choseOption(workNames, "please choose one of the below works"));
     }
+
     void printWork(string workName)
     {
         import std.array: replicate;
@@ -247,25 +249,13 @@ class DataBaseManager
         // finalizing the reults
         results = monResults + matResults + tResults + addResults;
 
-        float multValue; // the multiplier
+        float multValue = 1; // the multiplier
         // checking for discount
         if (!defaultMultiply)
-        {
-            write("do you want to multiply the results by a value 
-                    (if not you can enter 0 or ENTER, e.g. 1.25 or 0.75): ");
-            string choice = strip(readln());
-            if(choice.length != 0 || choice == "0")
-            {
-                if (checkVariable(choice, VARIABLE_CHECKER.FLOAT))
-                    multValue = to!uint(choice);
-                mulResults = multValue * results;
-            }
-        }
+            multValue = getAnswer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", (float q) {return q > 0;}, 1., "THE VALUE MUST BE POSITIVE");
         else
-        {
             multValue = 1.3;
-            mulResults = 1.3 * results;
-        }
+        mulResults = multValue * results;
         if (complete)
         {
             printSeperator();
@@ -304,18 +294,10 @@ class DataBaseManager
     void addWork()
     {
         import std.string;
+
+        string workName = getAnswer!string("please enter the name of the work:", (s) {return s!="";}, (_) {return true;}, "WORK NAME CANNOT BE EMPTY", true);
+
         printSeperator();
-
-        string workName = "";
-        while(true) // get the name
-        {
-            write("please enter the name of the work: ");
-            workName = strip(readln());
-            if (workName.length != 0)
-                break;
-            writeln("work name cannot be empty");
-        }
-
         db["works"][workName] = JSONValue.emptyObject;
         db["works"][workName]["monjogs"] = JSONValue.emptyObject;
         auto currentWorkMonjogs = "monjogs" in db["works"][workName].object();
@@ -330,29 +312,14 @@ class DataBaseManager
 
             foreach(code; codes)
             {
-                write("please enter the ",makeBlue("number")," of monjogs for code ", code, ": ");
-                while(true)
-                {
-                    auto codeCountStr = strip(readln());
-                    int codeCount = 0;
-                    if (checkVariable(codeCountStr, VARIABLE_CHECKER.INT))
-                    {
-                        codeCount = to!int(codeCountStr);
-                        (*currentWorkMonjogs)[code] = codeCount;
-                        break;
-                    }
-                    write("please enter the ", makeBlue("number"), " of monjogs for code ", code, ": ");
-                }
-                writeln("=======================================");
+                uint codeCount = getAnswer!uint("please enter the " ~ makeBlue("number")~" of monjogs for code "~code~":", (string s) {return s!="";}, (uint c) {return c > 0;}, "NUMBER OF MONJOGS NEEDS TO BE POSITIVE");
+                (*currentWorkMonjogs)[code] = codeCount;
+                printSeperator();
                 if (code !in db["codes"])
                 {
-                    write("please enter the ", makeBlue("price"), " for ", code ," monjog (press Enter for default): ");
-                    auto price = strip(readln());
-                    if (!price.length) 
-                        db["codes"][code] = -1;
-                    else
-                        db["codes"][code] = to!float(price);
-                    writeln("=======================================");
+                    float price = getAnswer!float("please enter the " ~ makeBlue("price") ~ " for " ~ code ~ " monjog (press Enter for default):", (float p) {return p > 0;}, -1, "THE PRICE FOR MONJOGS CANNOT BE NEGATIVE");
+                    db["codes"][code] = to!float(price);
+                    printSeperator();
                 }
             }
         }
@@ -371,31 +338,13 @@ class DataBaseManager
 
             foreach(material; materialNames)
             {
-                write("please enter the ", makeRed("number"), " of ", material, ": ");
-                while(true)
-                {
-                    auto materialCountStr = strip(readln());
-                    int materialCount = 0;
-                    if (checkVariable(materialCountStr, VARIABLE_CHECKER.INT))
-                    {
-                        materialCount = to!int(materialCountStr);
-                        (*currentWorkMaterials)[material] = materialCount;
-                        break;
-                    }
-                    write("please enter the ", makeRed("amount"), " of material for ", material, ": ");
-                }
+                uint materialCount = getAnswer!uint("please enter the " ~ makeBlue("number")~" of materials for "~makeBlue(material)~":", (string s) {return s!="";}, (uint c) {return c > 0;}, "NUMBER OF MATERIALS NEEDS TO BE POSITIVE");
+                (*currentWorkMaterials)[material] = materialCount;
+
                 if (material !in db["other_materials"])
                 {
-                    while(true)
-                    {
-                        write("please enter the ", makeRed("price")," for ", material, ": ");
-                        auto price = strip(readln());
-                        if (checkVariable(price, VARIABLE_CHECKER.INT) || checkVariable(price, VARIABLE_CHECKER.FLOAT))
-                        {
-                            db["other_materials"][material] = to!float(price);
-                            break;
-                        }
-                    }
+                    float price = getAnswer!float("please enter the "~ makeRed("price")~" for "~ material, (string s) {return s!="";}, (float p) {return p > 0;}, "THE PRICE FOR MATERIALS CANNOT BE NEGATIVE");
+                    db["other_materials"][material] = to!float(price);
                 }
             }
         }
@@ -507,6 +456,7 @@ class DataBaseManager
             writeln(makeRed("please enter a valid option inside this range:"));
         }
     }
+
     void updateJSONValue(ref JSONValue jsonval, in float defaultValue = 0)
     {
         while(true)
