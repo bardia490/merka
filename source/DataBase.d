@@ -81,7 +81,7 @@ class DataBaseManager
     void printWork() // for print_work option in main
     {
         string[] workNames = db["works"].object.keys;
-        printWork(choseOption(workNames));
+        printWork(choseOption(workNames, "please choose one of the below works"));
     }
     void printWork(string workName)
     {
@@ -160,7 +160,7 @@ class DataBaseManager
         }
     }
 
-    bool calculateWork()
+    bool calculateWork(string workName = "", bool complete = false,bool ignore_time = false, bool defaultMultiply = false)
     {
         import std.array: split, replicate;
 
@@ -171,10 +171,13 @@ class DataBaseManager
             return false;
         }
 
-        writeln("this is the list of all the works");
+        if (workName == "")
+        {
+            writeln("this is the list of all the works");
 
-        string[] workNames = db["works"].object.keys;
-        auto workName = choseOption(workNames, "Please choose on of the works below"); // returns the work name as string
+            string[] workNames = db["works"].object.keys;
+            workName = choseOption(workNames, "Please choose on of the works below"); // returns the work name as string
+        }
 
         auto currentWorkRef = workName in db["works"];
         if (!currentWorkRef)
@@ -189,7 +192,8 @@ class DataBaseManager
 
         if ("monjogs" in currentWork)
         {
-            printMonjog(currentWork);
+            if (complete)
+                printMonjog(currentWork);
             float defaultPrice = db["codes"].object()["default"].get!float;
             foreach(name_, count_; currentWork["monjogs"].object)
             {
@@ -207,7 +211,8 @@ class DataBaseManager
             return false;
         if ("materials" in currentWork)
         {
-            printMaterials(currentWork);
+            if (complete)
+                printMaterials(currentWork);
             foreach(name_, count_; currentWork["materials"].object)
             {
                 float ucount_ = count_.get!float;
@@ -219,60 +224,95 @@ class DataBaseManager
         if ("additional_costs" in db)
         {
             addResults = db["additional_costs"].object["price"].get!float;
-            writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
-            writeln("price",printSpaces("price"), prettify!float(addResults));
-            printSeperator();
+            if (complete)
+            {
+                writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
+                writeln("price",printSpaces("price"), prettify!float(addResults));
+                printSeperator();
+            }
         }
 
         // calculating the time
         float timePrice = db["time"].object["price"].get!float;
         if ("time" in currentWork) // if time is already set
         {
-            printWorkTime(currentWork);
+            if (complete)
+                printWorkTime(currentWork);
             tResults = currentWork["time"].get!float * timePrice;
         }
         else
-            tResults = calcTime(timePrice);
+            if (!ignore_time)
+                tResults = calcTime(timePrice);
 
         // finalizing the reults
         results = monResults + matResults + tResults + addResults;
 
-        // checking for discount
-        write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER, e.g. 25 or 125): ");
         uint multValue; // the multiplier
-DISCOUNT:
-        try
+        // checking for discount
+        if (!defaultMultiply)
         {
-            string choice = strip(readln());
-            if(choice.length != 0)
+            write("do you want to increase (or decrease) the results by a % (if not you can enter 0 or ENTER, e.g. 25 or 125): ");
+DISCOUNT:
+            try
             {
-                multValue = to!uint(choice);
-                if (multValue <= 100)
-                    mulResults = (100-multValue) * results / 100;
+                string choice = strip(readln());
+                if(choice.length != 0)
+                {
+                    multValue = to!uint(choice);
+                    if (multValue <= 100)
+                        mulResults = (100-multValue) * results / 100;
+                    else
+                        mulResults = multValue * results / 100;
+                }
                 else
-                    mulResults = multValue * results / 100;
+                {
+                    mulResults = results;
+                }
             }
-            else
+            catch(Exception)
             {
-                mulResults = results;
+                writeln("please enter a number!");
+                goto DISCOUNT;
             }
         }
-        catch(Exception)
+        else
         {
-            writeln("please enter a number!");
-            goto DISCOUNT;
+            multValue = 130;
+            mulResults = 1.3 * results;
+        }
+        if (complete)
+        {
+            printSeperator();
+            writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!uint(monResults)));
+            writeln("\x1b[38;5;225mthe final price for materials was: ", prettify(to!int(matResults)));
+            writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify(to!int(addResults)));
+            writeln("\x1b[38;5;225mthe final price for time was: ", prettify(to!int(tResults)));
+            writeln("\x1b[38;5;225mthe discount value was: ", multValue);
+            writeln("\x1b[38;5;134mthe price (without discount) is: ", prettify(to!int(results)), "\x1b[0m");
+            writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
+            printSeperator();
+        }
+        else
+            writeln(mulResults);
+        return true;
+    }
+
+    void calculateAllWorkPrices(bool complete = false)
+    {
+        import std.array: split, replicate;
+
+        if(isDataBaseEmpty)
+        {
+            writeln(makeRed("there was no work in the data base"));
+            printSeperator();
         }
 
-        printSeperator();
-        writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!uint(monResults)));
-        writeln("\x1b[38;5;225mthe final price for materials was: ", prettify(to!int(matResults)));
-        writeln("\x1b[38;5;225mthe final price for additional costs was: ", prettify(to!int(addResults)));
-        writeln("\x1b[38;5;225mthe final price for time was: ", prettify(to!int(tResults)));
-        writeln("\x1b[38;5;225mthe discount value was: ", multValue);
-        writeln("\x1b[38;5;134mthe price (without discount) is: ", prettify(to!int(results)), "\x1b[0m");
-        writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
-        printSeperator();
-        return true;
+        string[] workNames = db["works"].object.keys;
+        foreach(workName; workNames)
+        {
+            write(workName, printSpaces(workName, 40));
+            calculateWork(workName, false, true, true);
+        }
     }
 
     void addWork()
@@ -471,12 +511,12 @@ DISCOUNT:
             string choice = strip(readln());
             if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
             {
-                auto key = to!long(choice);
-                if (key-1 >= 0 && key -1 < options.length)
-                    return key - 1;
+                auto key = to!long(choice) - 1;
+                if (key >= 0 && key < options.length)
+                    return key;
             }
             auto step = countUntil(options, choice);
-            if (step)
+            if (step != -1)
                 return step;
             writeln(makeRed("please enter a valid option inside this range:"));
         }
@@ -485,7 +525,7 @@ DISCOUNT:
     {
         while(true)
         {
-            write("what do you want to change it to: (ENTER for default)");
+            write("what do you want to change it to: (ENTER for default): ");
             string choice = strip(readln());
             if (choice == "")
             {
@@ -495,7 +535,10 @@ DISCOUNT:
                     break;
                 }
                 else
+                {
+                    writeln("this property doesn't have a default value");
                     continue;
+                }
             }
             if (checkVariable (choice, VARIABLE_CHECKER.INTEGER, true) || checkVariable (choice, VARIABLE_CHECKER.FLOAT, true))
             {
@@ -505,7 +548,7 @@ DISCOUNT:
             writeln(makeRed("please enter a Number"));
         }
     }
-    void changeJSONObjectName(ref JSONValue jsonval, string previousName) // , string lastName, string newName
+    string changeJSONObjectName(ref JSONValue jsonval, string previousName) // , string lastName, string newName => returns the new Name
     {
         while(true)
         {
@@ -516,7 +559,7 @@ DISCOUNT:
                 JSONValue dummyVar = jsonval[previousName];
                 jsonval.object.remove(previousName);
                 jsonval[choice] = dummyVar;
-                break;
+                return choice;
             }
             writeln(makeRed("please enter something"));
         }
@@ -580,8 +623,8 @@ DISCOUNT:
                 break;
         }
         if (s == "codes")
-            defaultValue = db["codes"]["default"].get!float ;
-        updateJSONValue(db[s][option]);
+            defaultValue = db["codes"]["default"].get!float;
+        updateJSONValue(db[s][option], defaultValue);
         return true;
     }
     bool changeWorkSettins(string s) // s has to either be either workName or changeMaterial or changeMonjogs
@@ -621,7 +664,22 @@ DISCOUNT:
                     updateJSONValue(db["works"][option]["materials"][name]);
                 }
                 if (newOption == "materialName")
-                    changeJSONObjectName(db["works"][option]["materials"], name);
+                {
+                    string newName = changeJSONObjectName(db["works"][option]["materials"], name);
+                    if (newName !in db["other_materials"])
+                    {
+                        while(true)
+                        {
+                            write("please enter a price for this material: ");
+                            string newPrice = strip(readln());
+                            if (checkVariable(newPrice, VARIABLE_CHECKER.FLOAT))
+                            {
+                                db["other_materials"][newName] = to!float(newPrice);
+                                break;
+                            }
+                        }
+                    }
+                }
                 break;
             case "changeMonjogs":
                 printSeperator();
@@ -637,7 +695,22 @@ DISCOUNT:
                     updateJSONValue(db["works"][option]["monjogs"][name]);
                 }
                 if (newOption == "monjogName")
-                    changeJSONObjectName(db["works"][option]["materials"], name);
+                {
+                    string newName = changeJSONObjectName(db["works"][option]["monjogs"], name);
+                    if (newName !in db["codes"])
+                    {
+                        while(true)
+                        {
+                            write("please enter a price for this monjog: ");
+                            string newPrice = strip(readln());
+                            if (checkVariable(newPrice, VARIABLE_CHECKER.FLOAT))
+                            {
+                                db["codes"][newName] = to!float(newPrice);
+                                break;
+                            }
+                        }
+                    }
+                }
                 break;
         }
         return true;

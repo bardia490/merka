@@ -33,6 +33,7 @@ void printHelp()
     //writeln("type a or all to seeal  l the reports so far");
     writeln("type ", makeBlue("cl"),"  or ", makeBlue("clear"), "      to clear the screen");
     writeln("type ", makeBlue("ca"),"  or ", makeBlue("calculate"), "  to calculate the price for a work");
+    writeln("type ", makeBlue("caa"),"  or ", makeBlue("calculate-all"), "  to calculate the price for a work");
     writeln("type ", makeBlue("pa"),"  or ", makeBlue("print_all"), "  to print all the works");
     writeln("type ", makeBlue("pr"),"  or ", makeBlue("print_work"), " to print a specific work");
     writeln("type ", makeBlue("re"),"  or ", makeBlue("reload"), "     to reload the contents of the settings file");
@@ -77,7 +78,10 @@ void main(){
                 stdout.flush;
                 break;
             case "ca" , "calculate":
-                dbm.calculateWork;
+                dbm.calculateWork("", true);
+                break;
+            case "caa" , "calculate-all":
+                dbm.calculateAllWorkPrices;
                 break;
             case "pa", "print_all":
                 dbm.printAll;
