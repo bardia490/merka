@@ -74,9 +74,9 @@ bool checkVariable(string var, VARIABLE_CHECKER check, bool silent = false)
     }
 }
 
-union Results(T)
+struct Results(T)
 {
-    ubyte status; // returns a number on failure
+    ubyte status = 1; // returns 0 number on failure
     T result; // returns the value with type T
 }
 
@@ -107,7 +107,7 @@ Results!(T) checkVariable(T)(string var, bool silent = false)
 // if error_message is set to a non empty string it prints the error_message after every wrong input
 // if error_message is set to a empty string it prints the default error message
 // if print_sep is set to true it prints the seperator before the question every time
-T getAnswer(T)(string question = "", bool function(string s) q_condition, bool function(T t) condition, string error_message = "", bool print_sep = false)
+T getAnswer(T)(string question, bool function(string s) q_condition, bool function(T t) condition, string error_message = "", bool print_sep = false)
 {
     import std.string: strip;
     while(true)
@@ -129,9 +129,26 @@ T getAnswer(T)(string question = "", bool function(string s) q_condition, bool f
     }
 }
 
+// same as getAnswer but the q_condition is that it cannot be empty
+T get_non_empty_answer(T)(string question = "", bool function(T t) condition, string error_message = "", bool print_sep = false)
+{
+    return getAnswer!T(question, (string s) {return s != "";}, condition, error_message, print_sep);
+}
+
+// prompts the user until it gets a non empty and natural (answer must be a number) answer and returns it 
+T get_non_empty_natural_answer(T)(string question = "", string error_message = "", bool print_sep = false)
+{
+    return getAnswer!T(question, (string s) {return s != "";}, (T n) {return n >= 0;}, error_message, print_sep);
+}
+
+// prompts the user until it gets a non empty and positive (answer must be a number) answer and returns it 
+T get_non_empty_positive_answer(T)(string question = "", string error_message = "", bool print_sep = false)
+{
+    return getAnswer!T(question, (string s) {return s != "";}, (T n) {return n > 0;}, error_message, print_sep);
+}
 // like getAnswer but if the answer is empty it returns the default value
 // the default value and question are mandatory in this function
-T getAnswer(T)(string question, bool function(T t) condition, T default_, string error_message = "", bool print_sep = false)
+T getAnswer_with_default(T)(string question, bool function(T t) condition, T default_, string error_message = "", bool print_sep = false)
 {
     import std.string: strip;
 
@@ -143,6 +160,7 @@ T getAnswer(T)(string question, bool function(T t) condition, T default_, string
         writeln(question);
         write("> ");
         string answer = strip(readln());
+
 
         if (answer == "")
             return default_;
@@ -157,6 +175,17 @@ T getAnswer(T)(string question, bool function(T t) condition, T default_, string
             writeln(makeRed("WRONG INPUT"));
     }
 }
+
+T get_positive_default_answer(T)(string question, T default_, string error_message = "", bool print_sep = false)
+{
+   return getAnswer_with_default!T(question, (T n) {return n > 0;}, default_, error_message, print_sep); 
+}
+
+T get_natural_default_answer(T)(string question, T default_, string error_message = "", bool print_sep = false)
+{
+   return getAnswer_with_default!T(question, (T n) {return n >= 0;}, default_, error_message, print_sep); 
+}
+
 string prettify(T)(in T s)
 {
     void prettifyAux(ref char[] s)

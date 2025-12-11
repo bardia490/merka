@@ -79,14 +79,12 @@ class DataBaseManager
             printWork(work);
     }
 
-    void printWork() // for print_work option in main
+    void printWork(string workName = "")
     {
-        string[] workNames = db["works"].object.keys;
-        printWork(choseOption(workNames, "please choose one of the below works"));
-    }
-
-    void printWork(string workName)
-    {
+        if (workName == "")
+        {
+            workName = choseOption(db["works"].object.keys, "please choose one of the below works");
+        }
         import std.array: replicate;
         JSONValue work = db["works"][workName];
         writeln("\x1b[0;34m", replicate("<>", MDASHCOUNT/2), "\x1b[0m");
@@ -252,7 +250,7 @@ class DataBaseManager
         float multValue = 1; // the multiplier
         // checking for discount
         if (!defaultMultiply)
-            multValue = getAnswer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", (float q) {return q > 0;}, 1., "THE VALUE MUST BE POSITIVE");
+            multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
         else
             multValue = 1.3;
         mulResults = multValue * results;
@@ -291,16 +289,12 @@ class DataBaseManager
         }
     }
 
-    void addWork()
+    // adds new Monjogs to previously defined work, the caller needs to make sure the field materials exists in work
+    void addMonjog(string workName)
     {
-        import std.string;
-
-        string workName = getAnswer!string("please enter the name of the work:", (s) {return s!="";}, (_) {return true;}, "WORK NAME CANNOT BE EMPTY", true);
-
-        printSeperator();
-        db["works"][workName] = JSONValue.emptyObject;
-        db["works"][workName]["monjogs"] = JSONValue.emptyObject;
-        auto currentWorkMonjogs = "monjogs" in db["works"][workName].object();
+        if ("monjogs" !in db["works"][workName])
+            db["works"][workName]["monjogs"] = JSONValue.emptyObject;
+        bool entered_code = false;
         while(true)
         {
             write("please enter the (next) monjog code(s) or press Enter to finish adding monjogs: ");
@@ -308,25 +302,48 @@ class DataBaseManager
             import std.array: split;
             auto codes = split(strip(readln()));
 
-            if (!codes.length) break;
+            if (!codes.length)
+            {
+                if (entered_code)
+                    break;
+                else
+                {
+                    writeln(makeRed("MONJOGS CANNOT BE EMPTY"));
+                    continue;
+                }
+            }
 
             foreach(code; codes)
             {
-                uint codeCount = getAnswer!uint("please enter the " ~ makeBlue("number")~" of monjogs for code "~code~":", (string s) {return s!="";}, (uint c) {return c > 0;}, "NUMBER OF MONJOGS NEEDS TO BE POSITIVE");
-                (*currentWorkMonjogs)[code] = codeCount;
+                db["works"][workName]["monjogs"][code] = get_non_empty_positive_answer!uint("please enter the " ~
+                                                                                            makeBlue("number")~
+                                                                                            " of monjogs for code "~
+                                                                                            code~":",
+                                                                                            "NUMBER OF MONJOGS NEEDS TO BE POSITIVE");
+
                 printSeperator();
                 if (code !in db["codes"])
                 {
-                    float price = getAnswer!float("please enter the " ~ makeBlue("price") ~ " for " ~ code ~ " monjog (press Enter for default):", (float p) {return p > 0;}, -1, "THE PRICE FOR MONJOGS CANNOT BE NEGATIVE");
-                    db["codes"][code] = to!float(price);
+                    db["codes"][code] = get_positive_default_answer!float("please enter the " ~
+                                                                          makeBlue("price")~
+                                                                          " for " ~
+                                                                          code ~
+                                                                          " monjog (press Enter for default):",
+                                                                          -1.,
+                                                                          "THE PRICE FOR MONJOGS CANNOT BE NEGATIVE");
+                     
                     printSeperator();
                 }
             }
+            entered_code = true;
         }
-        printSeperator();
-        db["works"].object()[workName].object()["materials"] = JSONValue.emptyObject;
-        auto currentWorkMaterials = "materials" in db["works"].object()[workName].object(); // for storing the new materials
+    }
 
+    // adds new Materials to previously defined work, the caller needs to make sure the field materials exists in work
+    void addMaterial(string workName)
+    {
+        if ("materials" !in db["works"][workName])
+            db["works"][workName]["materials"] = JSONValue.emptyObject;
         while(true)
         {
             write("please enter the material name(s) or press Enter to finish adding materials: ");
@@ -338,17 +355,46 @@ class DataBaseManager
 
             foreach(material; materialNames)
             {
-                uint materialCount = getAnswer!uint("please enter the " ~ makeBlue("number")~" of materials for "~makeBlue(material)~":", (string s) {return s!="";}, (uint c) {return c > 0;}, "NUMBER OF MATERIALS NEEDS TO BE POSITIVE");
-                (*currentWorkMaterials)[material] = materialCount;
+                db["works"][workName]["materials"][material] = get_non_empty_positive_answer!uint("please enter the " ~
+                                                                                                  makeBlue("number")~
+                                                                                                  " of materials for "~
+                                                                                                  makeBlue(material)~
+                                                                                                  ":",
+                                                                                                  "NUMBER OF MATERIALS NEEDS TO BE POSITIVE");
 
                 if (material !in db["other_materials"])
                 {
-                    float price = getAnswer!float("please enter the "~ makeRed("price")~" for "~ material, (string s) {return s!="";}, (float p) {return p > 0;}, "THE PRICE FOR MATERIALS CANNOT BE NEGATIVE");
-                    db["other_materials"][material] = to!float(price);
+                    db["other_materials"][material] = get_non_empty_positive_answer!float("please enter the "~
+                                                                                          makeRed("price")~" for " ~
+                                                                                          makeBlue(material),
+                                                                                          "THE PRICE FOR MATERIALS CANNOT BE NEGATIVE");
+                    
                 }
             }
         }
+    }
+
+    void addWork()
+    {
+        import std.string;
+
+        string workName = getAnswer!string("please enter the " ~ makeBlue("name")~ " of the work:",
+                                           (string s) {return s!="";}, (_) {return true;},
+                                           "WORK NAME CANNOT BE EMPTY", true);
+
         printSeperator();
+        db["works"][workName] = JSONValue.emptyObject;
+
+        // adding monjogs
+        db["works"][workName]["monjogs"] = JSONValue.emptyObject;
+        addMonjog(workName);
+        printSeperator();
+
+        // adding materials
+        db["works"].object()[workName].object()["materials"] = JSONValue.emptyObject;
+        addMaterial(workName);
+        printSeperator();
+
         write("do you want to set time for ", workName, " (ENTER for NO, h to also see time help): ");
         string answer = strip(readln());
         if (answer == "h" || answer == "help")
@@ -508,14 +554,18 @@ class DataBaseManager
                             "codes",
                             "other_materials",
                             "workName",
+                            "addMaterials",
                             "changeMaterial",
+                            "addMonjogs",
                             "changeMonjogs"];
         string[] longOptions = ["change the price for each hour",
                                 "change the additional costs",
                                 "change the price for a monjog",
                                 "change the price of some material",
                                 "change the name of a work",
+                                "add new materials to some work",
                                 "change something about materials in a work",
+                                "add new monjogs to some work",
                                 "change something about monjogs in a work"];
         string option = options[choseOptionIndex(longOptions)];
 
@@ -525,7 +575,7 @@ class DataBaseManager
                 if (!changePriceSettins(option))
                     return;
                 break;
-            case "workName", "changeMaterial", "changeMonjogs":
+            case "workName", "changeMaterial", "changeMonjogs", "addMaterials", "addMonjogs":
                 if (!changeWorkSettins(option))
                     return;
                 break;
@@ -535,6 +585,7 @@ class DataBaseManager
         writeln("operation was succesfull");
         printSeperator();
     }
+
     bool changePriceSettins(string s) // s has to either be time or additional_costs
     {
         if (s != "time" && s != "additional_costs" && s != "codes" && s != "other_materials")
@@ -563,9 +614,10 @@ class DataBaseManager
         updateJSONValue(db[s][option], defaultValue);
         return true;
     }
-    bool changeWorkSettins(string s) // s has to either be either workName or changeMaterial or changeMonjogs
+
+    bool changeWorkSettins(string s) // s has to either be either workName or changeMaterial or changeMonjogs or addMonjogs or addMaterials
     {
-        if (s != "workName" && s != "changeMaterial" && s != "changeMonjogs")
+        if (s != "workName" && s != "changeMaterial" && s != "changeMonjogs" && s != "addMonjogs" && s != "addMaterials")
         {
             writeln(makeRed("not the right argument for the work function"));
             writeln("aborting operation");
@@ -579,6 +631,9 @@ class DataBaseManager
         {
             case "workName":
                 changeJSONObjectName(db["works"], option);
+                break;
+            case "addMaterials":
+                addMaterial(option);
                 break;
             case "changeMaterial":
                 if ("materials" !in db["works"][option])
@@ -616,6 +671,9 @@ class DataBaseManager
                         }
                     }
                 }
+                break;
+            case "addMonjogs":
+                addMonjog(option);
                 break;
             case "changeMonjogs":
                 printSeperator();
