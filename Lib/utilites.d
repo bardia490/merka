@@ -39,38 +39,113 @@ void printSeperator()
     }
 }
 
-enum VARIABLE_CHECKER
+bool checkVariable(string number, bool justInt = false,bool silent = false)
 {
-    INT,
-    INTEGER,
-    UINT,
-    FLOAT
+    import std.algorithm.iteration: fold;
+
+    if (number == "")
+        return false;
+
+    if (justInt)
+        return number.fold!((acc_, n) => acc_ && (n >= '0') && (n <= '9') )(true);
+    // counts the dots in the floating point number to make sure they are not more than 1
+    bool is_valid_float(string number)
+    {
+        uint dots = 0;
+        foreach(n; number)
+            if (n == '.')
+                if (dots++ > 1) return false;
+        return true;
+    }
+    return is_valid_float(number) && number.fold!((acc_, n) => acc_ && ((n >= '0') && (n <= '9') || (n == '.')))(true);
 }
 
-bool checkVariable(string var, VARIABLE_CHECKER check, bool silent = false)
+// for chosing the options, it can use indexes and values and doesn't stop until
+//you enter the right value, question is what you want to be asked before asking for a option
+// returns the value in the list
+string choseOption(string[] options, string question = "")
 {
+    import std.string: strip;
+    import std.array: replicate;
     import std.conv: to;
-    try
+
+    if (options.length == 0)
+        return "";
+    import std.algorithm.searching: canFind;
+    while (true)
     {
-        switch (check)
+        write("\x1b[38;5;166m");
+        writeln(replicate("<>", MDASHCOUNT/2));
+        write("\x1b[38;5;231m");
+        writeln(question);
+        write("\x1b[38;5;231m");
+        foreach(index, option; options)
+            writeln(index+1, ": ", option);
+        write("> ");
+        string choice = strip(readln());
+        if (checkVariable(choice, true, true))
         {
-            case VARIABLE_CHECKER.INT, VARIABLE_CHECKER.INTEGER:
-                to!int(var);
-                return true;
-                break;
-            case VARIABLE_CHECKER.FLOAT:
-                to!float(var);
-                return true;
-                break;
-            default:
-                return true;
+            auto key = to!int(choice);
+            if (key-1 >= 0 && key -1 < options.length)
+            {
+                write("\x1b[38;5;166m");
+                writeln(replicate("<>", MDASHCOUNT/2));
+                write("\x1b[38;5;231m");
+                return options[key - 1];
+            }
         }
+        if (canFind(options, choice))
+        {
+            write("\x1b[38;5;166m");
+            writeln(replicate("<>", MDASHCOUNT/2));
+            write("\x1b[38;5;231m");
+            return choice;
+        }
+        writeln(makeRed("please enter a valid option inside this range:"));
     }
-    catch (Exception)
+}
+
+// for chosing the options, it can use indexes and values and doesn't stop until you enter the right value
+// returns the index of the option in the list
+long choseOptionIndex(string[] options) 
+{
+    import std.algorithm.searching: countUntil;
+    import std.string: strip;
+    import std.array: replicate;
+    import std.conv: to;
+
+    if (options.length == 0)
+        return -1;
+
+    while (true)
     {
-        if (!silent)
-            writeln("\x1B[1;31msorry could not convert ", var, " to ", check, "\x1B[0m");
-        return false;
+        write("\x1b[38;5;166m");
+        writeln(replicate("<>", MDASHCOUNT/2));
+        write("\x1b[38;5;231m");
+        foreach(index, option; options)
+            writeln(index+1, ": ", option);
+        write("> ");
+        string choice = strip(readln());
+        if (checkVariable(choice, true, true))
+        {
+            auto key = to!long(choice) - 1;
+            if (key >= 0 && key < options.length)
+            {
+                write("\x1b[38;5;166m");
+                writeln(replicate("<>", MDASHCOUNT/2));
+                write("\x1b[38;5;231m");
+                return key;
+            }
+        }
+        auto step = countUntil(options, choice);
+        if (step != -1)
+        {
+            write("\x1b[38;5;166m");
+            writeln(replicate("<>", MDASHCOUNT/2));
+            write("\x1b[38;5;231m");
+            return step;
+        }
+        writeln(makeRed("please enter a valid option inside this range:"));
     }
 }
 

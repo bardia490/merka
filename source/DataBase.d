@@ -84,6 +84,8 @@ class DataBaseManager
         if (workName == "")
         {
             workName = choseOption(db["works"].object.keys, "please choose one of the below works");
+            if (workName == "")
+                writeln("no work was found in the database");
         }
         import std.array: replicate;
         JSONValue work = db["works"][workName];
@@ -413,7 +415,6 @@ class DataBaseManager
 
     void removeWork()
     {
-
         printSeperator();
         if(isDataBaseEmpty)
         {
@@ -422,115 +423,24 @@ class DataBaseManager
             return;
         }
 
-        printAll(false);
-        write("please enter the name of the work that you want to ", makeRed("remove"), ": ");
-        string workName = strip(readln());
-        string[] workNames = db["works"].object().keys();
-
-        if(checkVariable(workName, VARIABLE_CHECKER.INT, true)) // check if it is entered as number
-            workName = workNames[to!int(workName) - 1]; // convert to name
-
-        if (workName in db["works"])
-        {
-            db["works"].object().remove(workName);
-            writeln("[INFO]: WORK WAS REMOVED SUCCESSFULLY");
-            import std.file: write;
-            write("settings/works.json",db.toPrettyString());
-            writeln("[INFO]: WORKS.JSON FILE WAS UPDATED SUCCESSFULLY");
-            printSeperator();
-        }
-        else
-        {
-            writeln("sorry ", makeRed(workName), " wasn't found in the data base");
-            printSeperator();
-        }
-    }
-    string choseOption(string[] options, string question = "")
-     // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value, question is what you want to be asked before asking for a option
-     // returns the value in the list
-    {
-        import std.array: replicate;
-
-        import std.algorithm.searching: canFind;
-        while (true)
-        {
-            write("\x1b[38;5;166m");
-            writeln(replicate("<>", MDASHCOUNT/2));
-            write("\x1b[38;5;231m");
-            writeln(question);
-            foreach(index, option; options)
-                writeln(index+1, ": ", option);
-            write("> ");
-            string choice = strip(readln());
-            if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
-            {
-                auto key = to!int(choice);
-                if (key-1 >= 0 && key -1 < options.length)
-                {
-                    write("\x1b[38;5;166m");
-                    writeln(replicate("<>", MDASHCOUNT/2));
-                    write("\x1b[38;5;231m");
-                    return options[key - 1];
-                }
-            }
-            if (canFind(options, choice))
-                return choice;
-            writeln(makeRed("please enter a valid option inside this range:"));
-        }
-    }
-
-    long choseOptionIndex(string[] options) 
-     // for chosing the options, it can use indexes and values and doesn't stop until you enter the right value
-     // returns the index of the option in the list
-    {
-        import std.algorithm.searching: countUntil;
-        while (true)
-        {
-            foreach(index, option; options)
-                writeln(index+1, ": ", option);
-            write("> ");
-            string choice = strip(readln());
-            if (checkVariable(choice,VARIABLE_CHECKER.INTEGER, true))
-            {
-                auto key = to!long(choice) - 1;
-                if (key >= 0 && key < options.length)
-                    return key;
-            }
-            auto step = countUntil(options, choice);
-            if (step != -1)
-                return step;
-            writeln(makeRed("please enter a valid option inside this range:"));
-        }
+        string workName = choseOption(db["works"].object.keys, "please enter the name of the work that you want to " ~ makeRed("remove") ~ ": ");
+        db["works"].object().remove(workName);
+        writeln(makeBlue("WORK WAS REMOVED SUCCESSFULLY"));
+        import std.file: write;
+        write("settings/works.json",db.toPrettyString());
+        writeln(makeBlue("WORKS.JSON FILE WAS UPDATED SUCCESSFULLY"));
+        printSeperator();
     }
 
     void updateJSONValue(ref JSONValue jsonval, in float defaultValue = 0)
     {
-        while(true)
-        {
-            write("what do you want to change it to: (ENTER for default): ");
-            string choice = strip(readln());
-            if (choice == "")
-            {
-                if (defaultValue != 0)
-                {
-                    jsonval = defaultValue;
-                    break;
-                }
-                else
-                {
-                    writeln("this property doesn't have a default value");
-                    continue;
-                }
-            }
-            if (checkVariable (choice, VARIABLE_CHECKER.INTEGER, true) || checkVariable (choice, VARIABLE_CHECKER.FLOAT, true))
-            {
-               jsonval = to!float(choice);
-               break;
-            }
-            writeln(makeRed("please enter a Number"));
-        }
+        if (defaultValue != 0)
+               jsonval = get_positive_default_answer!float("what do you want to change it to (ENTER for default): ", defaultValue, makeRed("PLEASE ENTER A POSITIVE NUMBER"));
+        else
+               jsonval = get_non_empty_positive_answer!float("what do you want to change it to:", makeRed("PLEASE ENTER A POSITIVE NUMBER"));
     }
-    string changeJSONObjectName(ref JSONValue jsonval, string previousName) // , string lastName, string newName => returns the new Name
+
+    string changeJSONObjectName(ref JSONValue jsonval, string previousName)
     {
         while(true)
         {
@@ -649,6 +559,11 @@ class DataBaseManager
                                          "change the name of some material in this work"];
                 string newOption = options[choseOptionIndex(longOptions)];
                 string name = choseOption(db["works"][option]["materials"].object.keys, "which material:");
+                if (name == "")
+                {
+                    writeln("sorry no materials were found in this work");
+                    break;
+                }
                 if (newOption == "materialCount")
                 {
                     writeln("the previous value is: ", makeBlue(prettify!float(db["works"][option]["materials"][name].get!float)));
@@ -658,18 +573,7 @@ class DataBaseManager
                 {
                     string newName = changeJSONObjectName(db["works"][option]["materials"], name);
                     if (newName !in db["other_materials"])
-                    {
-                        while(true)
-                        {
-                            write("please enter a price for this material: ");
-                            string newPrice = strip(readln());
-                            if (checkVariable(newPrice, VARIABLE_CHECKER.FLOAT))
-                            {
-                                db["other_materials"][newName] = to!float(newPrice);
-                                break;
-                            }
-                        }
-                    }
+                        db["other_materials"][newName] = get_non_empty_positive_answer!float("please enter a price for this material: ", makeRed("price cannot be empty or negative"));
                 }
                 break;
             case "addMonjogs":
@@ -692,18 +596,7 @@ class DataBaseManager
                 {
                     string newName = changeJSONObjectName(db["works"][option]["monjogs"], name);
                     if (newName !in db["codes"])
-                    {
-                        while(true)
-                        {
-                            write("please enter a price for this monjog: ");
-                            string newPrice = strip(readln());
-                            if (checkVariable(newPrice, VARIABLE_CHECKER.FLOAT))
-                            {
-                                db["codes"][newName] = to!float(newPrice);
-                                break;
-                            }
-                        }
-                    }
+                        db["codes"][newName] = get_positive_default_answer!float("please enter a price for this monjog (ENTER for default): ", db["codes"]["default"].get!float, makeRed("PLEASE ENTER A NON EMPTY, POSITIVE ANSWER, FOR DEFAULT JUST PRESS ENTER"));
                 }
                 break;
         }
