@@ -16,6 +16,6 @@ void main()
     stdout.flush();
     
     appManager.update.reportUpdate;
-    writeln("press any key to exit ...");
+    writeln("press Enter to exit ...");
     readln();
 }

@@ -21,9 +21,6 @@ subPackage {
     importPaths "Lib"
     sourcePaths "source" "Lib"
     sourceFiles "source/*"
-    buildType "release" {
-        buildOptions "releaseMode" "optimize" "inline"
-    }
 }
 
 subPackage {
@@ -33,5 +30,4 @@ subPackage {
     importPaths "Lib/"
     sourcePaths "AppUpdate/" "Lib"
     sourceFiles "AppUpdate/*"
-    buildType "release"
 }

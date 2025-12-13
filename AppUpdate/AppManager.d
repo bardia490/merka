@@ -50,7 +50,7 @@ class APPManager
                 return UPDATE_STATUS.GIT_FAILED;
             writeln("download complete");
             writeln("rebuilding the app");
-            auto buildOutput = executeShell("dub build --config APP");
+            auto buildOutput = executeShell("dub build --config APP -b release");
             // writeln("the ouput was:");
             // writeln(buildOutput.output);
             if (buildOutput.status != 0)
