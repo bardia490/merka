@@ -17,6 +17,7 @@ import std.process;
 import std.json;
 import std.file;
 import utilites;
+import Anniversary;
 
 void printNameArt()
 {
@@ -27,19 +28,30 @@ void printNameArt()
 // TODO: make this look nicer
 void printHelp()
 {
+    import std.format;
     writeln("application help:");
-    writeln("type ", makeBlue("q"),"   or ", makeBlue("quit"), "       to quit the app");
-    writeln("type ", makeBlue("h"),"   or ", makeBlue("help"), "       to see the help");
-    //writeln("type a or all to seeal  l the reports so far");
-    writeln("type ", makeBlue("cl"),"  or ", makeBlue("clear"), "      to clear the screen");
-    writeln("type ", makeBlue("ca"),"  or ", makeBlue("calculate"), "  to calculate the price for a work");
-    writeln("type ", makeBlue("caa"),"  or ", makeBlue("calculate-all"), "  to calculate the price for a work");
-    writeln("type ", makeBlue("pa"),"  or ", makeBlue("print_all"), "  to print all the works");
-    writeln("type ", makeBlue("pr"),"  or ", makeBlue("print_work"), " to print a specific work");
-    writeln("type ", makeBlue("re"),"  or ", makeBlue("reload"), "     to reload the contents of the settings file");
-    writeln("type ", makeBlue("add")," or ", makeBlue("add_work"), "   to add a new work");
-    writeln("type ", makeBlue("rm") ,"  or ", makeBlue("remove"), "     to remove a previous work");
-    writeln("type ", makeBlue("ed") ,"  or ", makeBlue("edit"), "       to edit an item");
+    writeln(format("type %=20s or %=40s to quit the app", makeBlue("q"), makeBlue("quit")));
+    writeln(format("type %=20s or %=40s to see the help",  makeBlue("h"),  makeBlue("help")));
+    //writelformat(n("tye a or all to see all the reports so far");
+    writeln(format("type %=20s or %=40s to clear the screen",  makeBlue("cl"),  makeBlue("clear")));
+    writeln(format("type %=20s or %=40s to calculate the price for a work",
+                 makeBlue("ca"),  makeBlue("calculate-work")));
+    writeln(format("type %=20s or %=40s to calculate the price for all work",
+                 makeBlue("caa"),  makeBlue("caclulate-works")));
+    writeln(format("type %=20s or %=40s to print a specific work",
+                 makeBlue("pw"),  makeBlue("print-work")));
+    writeln(format("type %=20s or %=40s to print all the works",
+                 makeBlue("pa"),  makeBlue("print-all")));
+    writeln(format("type %=20s or %=40s to reload the contents of the settings file",
+                 makeBlue("re"),  makeBlue("reload")));
+    writeln(format("type %=20s or %=40s to add a new work",
+                 makeBlue("add"),  makeBlue("add-work")));
+    writeln(format("type %=20s or %=40s to remove a previous work",
+                 makeBlue("rm"),  makeBlue("remove-work")));
+    writeln(format("type %=20s or %=40s to edit an item",
+                 makeBlue("ed"),  makeBlue("edit")));
+    writeln(format("type %=20s or %=40s for a surperise",
+                 makeBlue("an"),  makeBlue("anniversary")));
     printSeperator();
 }
 
@@ -101,6 +113,9 @@ void main(){
                 break;
             case "ed", "edit":
                 dbm.edit();
+                break;
+            case "an", "anniversary":
+                second_anniversary();
                 break;
             case "monjog-error":
                 writeln("all works must have monjogs");

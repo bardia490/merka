@@ -1,4 +1,0 @@
-number -> code (175) -> gram -> price of every gram for every code 
-time -> constant in settings
-additional costs -> constant in settings
-other materials -> settings
