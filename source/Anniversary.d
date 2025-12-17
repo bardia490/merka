@@ -9,7 +9,7 @@ enum RESET = "\x1B[0m";
 
 void draw_heart()
 {
-    string[] heart = readText("heart.txt").split('\n');
+    string[] heart = readText("art-gallery/heart.txt").split('\n');
     foreach(index, line; heart)
     {
         writeln("\x1B[38;5;" ~ to!string(index + 160) ~ "m" ~ line);
@@ -21,10 +21,10 @@ void draw_heart()
 void draw_i_love_you_baby()
 {
     string[4] contents;
-    contents[0] = readText("I.txt");
-    contents[1] = readText("Love.txt");
-    contents[2] = readText("You.txt");
-    contents[3] = readText("Baby.txt");
+    contents[0] = readText("art-gallery/I.txt");
+    contents[1] = readText("art-gallery/Love.txt");
+    contents[2] = readText("art-gallery/You.txt");
+    contents[3] = readText("art-gallery/Baby.txt");
     foreach(index, line; contents)
     {
         write("\x1B[38;5;" ~ to!string(index + 160) ~ "m" ~ line);
@@ -35,7 +35,7 @@ void draw_i_love_you_baby()
 
 void draw_happy_aniversary()
 {
-    string[] contents = readText("happy_anniversary.txt").split('\n');
+    string[] contents = readText("art-gallery/happy_anniversary.txt").split('\n');
     foreach(index, line; contents)
     {
         write("\x1B[38;5;" ~ to!string(index + 160) ~ "m" ~ line);

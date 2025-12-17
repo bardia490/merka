@@ -21,7 +21,7 @@ import Anniversary;
 
 void printNameArt()
 {
-    string s = readText("art.txt");
+    string s = readText("art-gallery/art.txt");
     writeln(s);
 }
 
@@ -98,7 +98,7 @@ void main(){
             case "pa", "print_all":
                 dbm.printAll;
                 break;
-            case "pr", "print_work":
+            case "pw", "print_work":
                 dbm.printWork; // use the no argument printWork function
                 break;
             case "re", "reload":
