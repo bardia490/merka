@@ -286,7 +286,10 @@ class DataBaseManager
             printSeperator();
         }
 
+        import std.algorithm: sort;
+        import std.algorithm.mutation: SwapStrategy;
         string[] workNames = db["works"].object.keys;
+        workNames.sort!("a < b", SwapStrategy.stable);
         float multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
         foreach(workName; workNames)
         {
