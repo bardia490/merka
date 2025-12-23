@@ -42,6 +42,8 @@ void printHelp()
                  makeBlue("pw"),  makeBlue("print-work")));
     writeln(format("type %=20s or %=40s to print all the works",
                  makeBlue("pa"),  makeBlue("print-all")));
+    writeln(format("type %=20s or %=40s to print all the work prices",
+                 makeBlue("pap"),  makeBlue("print-all-prices")));
     writeln(format("type %=20s or %=40s to reload the contents of the settings file",
                  makeBlue("re"),  makeBlue("reload")));
     writeln(format("type %=20s or %=40s to add a new work",
@@ -95,8 +97,11 @@ void main(){
             case "caa" , "calculate-all":
                 dbm.calculateAllWorkPrices;
                 break;
-            case "pa", "print_all":
+            case "pa", "print-all":
                 dbm.printAll;
+                break;
+            case "pap", "print-all-prices":
+                dbm.calculateAllWorkPrices;
                 break;
             case "pw", "print_work":
                 dbm.printWork; // use the no argument printWork function

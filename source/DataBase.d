@@ -162,7 +162,10 @@ class DataBaseManager
         }
     }
 
-    bool calculateWork(string workName = "", bool complete = false,bool ignore_time = false, bool defaultMultiply = false)
+    bool calculateWork(string workName = "", bool complete = false,
+            bool ignore_time = false, bool defaultMultiply = false,
+            float defaultMultiplyValue = 1.3
+            )
     {
         import std.array: split, replicate;
 
@@ -254,7 +257,7 @@ class DataBaseManager
         if (!defaultMultiply)
             multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
         else
-            multValue = 1.3;
+            multValue = defaultMultiplyValue;
         mulResults = multValue * results;
         if (complete)
         {
@@ -275,7 +278,7 @@ class DataBaseManager
 
     void calculateAllWorkPrices(bool complete = false)
     {
-        import std.array: split, replicate;
+        import std.array: replicate;
 
         if(isDataBaseEmpty)
         {
@@ -284,10 +287,15 @@ class DataBaseManager
         }
 
         string[] workNames = db["works"].object.keys;
+        float multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
         foreach(workName; workNames)
         {
+            write("\x1b[38;5;166m");
+            writeln(replicate("<>", MDASHCOUNT/2));
+            write("\x1b[38;5;231m");
             write(workName, printSpaces(workName, 40));
-            calculateWork(workName, false, true, true);
+            calculateWork(workName, complete, true, true, multValue);
+            printSeperator();
         }
     }
 
