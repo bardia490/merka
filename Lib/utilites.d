@@ -39,7 +39,7 @@ void printSeperator()
     }
 }
 
-bool checkVariable(string number, bool justInt = false,bool silent = false)
+bool checkVariable(string number, bool justInt = false, bool silent = false)
 {
     import std.algorithm.iteration: fold;
 
@@ -105,8 +105,18 @@ string choseOption(string[] options, string question = "")
     }
 }
 
-// for chosing the options, it can use indexes and values and doesn't stop until you enter the right value
-// returns the index of the option in the list
+string choseOption(string[] options, string question = "", bool sort = false)
+{
+   if (sort)
+   {
+       import std.algorithm: sort;
+       import std.algorithm.mutation: SwapStrategy;
+       options.sort!("a < b", SwapStrategy.stable);
+   }
+   return choseOption(options, question);
+}
+
+/** for chosing the options, it can use indexes and values and doesn't stop until you enter the right value returns the index of the option in the list */
 long choseOptionIndex(string[] options) 
 {
     import std.algorithm.searching: countUntil;

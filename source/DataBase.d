@@ -83,7 +83,7 @@ class DataBaseManager
     {
         if (workName == "")
         {
-            workName = choseOption(db["works"].object.keys, "please choose one of the below works");
+            workName = choseOption(db["works"].object.keys, "please choose one of the below works", true);
             if (workName == "")
                 writeln("no work was found in the database");
         }
@@ -178,7 +178,7 @@ class DataBaseManager
             writeln("this is the list of all the works");
 
             string[] workNames = db["works"].object.keys;
-            workName = choseOption(workNames, "Please choose on of the works below"); // returns the work name as string
+            workName = choseOption(workNames, "Please choose on of the works below", true); // returns the work name as string
         }
 
         auto currentWorkRef = workName in db["works"];
@@ -423,7 +423,7 @@ class DataBaseManager
             return;
         }
 
-        string workName = choseOption(db["works"].object.keys, "please enter the name of the work that you want to " ~ makeRed("remove") ~ ": ");
+        string workName = choseOption(db["works"].object.keys, "please enter the name of the work that you want to " ~ makeRed("remove") ~ ": ", true);
         db["works"].object().remove(workName);
         writeln(makeBlue("WORK WAS REMOVED SUCCESSFULLY"));
         import std.file: write;
@@ -536,7 +536,7 @@ class DataBaseManager
         }
         
         printSeperator();
-        string option = choseOption(db["works"].object.keys, "please chose a work");
+        string option = choseOption(db["works"].object.keys, "please chose a work", true);
         final switch(s)
         {
             case "workName":
@@ -558,7 +558,7 @@ class DataBaseManager
                 string[2] longOptions = ["change the number of some material in this work",
                                          "change the name of some material in this work"];
                 string newOption = options[choseOptionIndex(longOptions)];
-                string name = choseOption(db["works"][option]["materials"].object.keys, "which material:");
+                string name = choseOption(db["works"][option]["materials"].object.keys, "which material:", true);
                 if (name == "")
                 {
                     writeln("sorry no materials were found in this work");
