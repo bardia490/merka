@@ -192,7 +192,8 @@ Results!(T) checkVariable(T)(string var, bool silent = false)
 // if error_message is set to a non empty string it prints the error_message after every wrong input
 // if error_message is set to a empty string it prints the default error message
 // if print_sep is set to true it prints the seperator before the question every time
-T getAnswer(T)(string question, bool function(string s) q_condition, bool function(T t) condition, string error_message = "", bool print_sep = false)
+T getAnswer(T)(string question, bool function(string s) q_condition,
+        bool function(T t) condition, string error_message = "", bool print_sep = false)
 {
     import std.string: strip;
     while(true)

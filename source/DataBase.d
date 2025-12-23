@@ -81,11 +81,22 @@ class DataBaseManager
 
     void printWork(string workName = "")
     {
+        if (isDataBaseEmpty())
+        {
+            writeln("no work was found in the database");
+            printSeperator();
+            return;
+        }
         if (workName == "")
         {
-            workName = choseOption(db["works"].object.keys, "please choose one of the below works", true);
-            if (workName == "")
-                writeln("no work was found in the database");
+            string[] workNames = db["works"].object.keys;
+            workNames ~= "back";
+            workName = choseOption(workNames, "please choose one of the below works", true);
+            if (workName == "back")
+            {
+                printSeperator();
+                return;
+            }
         }
         import std.array: replicate;
         JSONValue work = db["works"][workName];
@@ -391,11 +402,16 @@ class DataBaseManager
     {
         import std.string;
 
-        string workName = getAnswer!string("please enter the " ~ makeBlue("name")~ " of the work:",
-                                           (string s) {return s!="";}, (_) {return true;},
-                                           "WORK NAME CANNOT BE EMPTY", true);
+        string workName = getAnswer!string("please enter the " ~ makeBlue("name")~ 
+                " of the work (can also press back):",
+                (string s) {return s!="";}, (_) {return true;},
+                "WORK NAME CANNOT BE EMPTY", true);
 
-        printSeperator();
+        if (workName == "back")
+        {
+            printSeperator();
+            return;
+        }
         db["works"][workName] = JSONValue.emptyObject;
 
         // adding monjogs
@@ -434,7 +450,16 @@ class DataBaseManager
             return;
         }
 
-        string workName = choseOption(db["works"].object.keys, "please enter the name of the work that you want to " ~ makeRed("remove") ~ ": ", true);
+        string[] workNames = db["works"].object.keys;
+        workNames ~= "back";
+        string workName = choseOption(workNames,
+                "please enter the name of the work that you want to " ~
+                makeRed("remove") ~ ": ", true);
+        if (workName == "back")
+        {
+            printSeperator();
+            return;
+        }
         db["works"].object().remove(workName);
         writeln(makeBlue("WORK WAS REMOVED SUCCESSFULLY"));
         import std.file: write;
@@ -446,9 +471,11 @@ class DataBaseManager
     void updateJSONValue(ref JSONValue jsonval, in float defaultValue = 0)
     {
         if (defaultValue != 0)
-               jsonval = get_positive_default_answer!float("what do you want to change it to (ENTER for default): ", defaultValue, makeRed("PLEASE ENTER A POSITIVE NUMBER"));
+               jsonval = get_positive_default_answer!float("what do you want to change it to (ENTER for default): ",
+               defaultValue, makeRed("PLEASE ENTER A POSITIVE NUMBER"));
         else
-               jsonval = get_non_empty_positive_answer!float("what do you want to change it to:", makeRed("PLEASE ENTER A POSITIVE NUMBER"));
+               jsonval = get_non_empty_positive_answer!float("what do you want to change it to:",
+                       makeRed("PLEASE ENTER A POSITIVE NUMBER"));
     }
 
     string changeJSONObjectName(ref JSONValue jsonval, string previousName)
@@ -478,7 +505,8 @@ class DataBaseManager
                             "addMaterials",
                             "changeMaterial",
                             "addMonjogs",
-                            "changeMonjogs"];
+                            "changeMonjogs",
+                            "back"];
         string[] longOptions = ["change the price for each hour",
                                 "change the additional costs",
                                 "change the price for a monjog",
@@ -487,7 +515,8 @@ class DataBaseManager
                                 "add new materials to some work",
                                 "change something about materials in a work",
                                 "add new monjogs to some work",
-                                "change something about monjogs in a work"];
+                                "change something about monjogs in a work",
+                                "step back from this function"];
         string option = options[choseOptionIndex(longOptions)];
 
         final switch (option)
@@ -500,6 +529,8 @@ class DataBaseManager
                 if (!changeWorkSettins(option))
                     return;
                 break;
+            case "back":
+                return;
         }
         import std.file: write;
         write("settings/works.json",db.toPrettyString());
@@ -522,12 +553,16 @@ class DataBaseManager
         {
             case "time", "additional_costs":
                 option = "price";
-                writeln("the current ", makeBlue("price") ," set for ",s ," is: ", makeBlue(prettify!float(db[s]["price"].get!float)));
+                writeln("the current ", makeBlue("price") ,
+                        " set for ",s ," is: ",
+                        makeBlue(prettify!float(db[s]["price"].get!float)));
                 break;
             case "codes", "other_materials":
                 printSeperator();
                 option = choseOption(db[s].object.keys, "please chose one of the below items");
-                writeln("the current ", makeBlue("price") ," set for ", makeBlue(option) ," is: ", makeBlue(prettify!float(db[s][option].get!float)));
+                writeln("the current ", makeBlue("price") ,
+                        " set for ", makeBlue(option) ,
+                        " is: ", makeBlue(prettify!float(db[s][option].get!float)));
                 break;
         }
         if (s == "codes")
@@ -577,14 +612,16 @@ class DataBaseManager
                 }
                 if (newOption == "materialCount")
                 {
-                    writeln("the previous value is: ", makeBlue(prettify!float(db["works"][option]["materials"][name].get!float)));
+                    writeln("the previous value is: ",
+                            makeBlue(prettify!float(db["works"][option]["materials"][name].get!float)));
                     updateJSONValue(db["works"][option]["materials"][name]);
                 }
                 if (newOption == "materialName")
                 {
                     string newName = changeJSONObjectName(db["works"][option]["materials"], name);
                     if (newName !in db["other_materials"])
-                        db["other_materials"][newName] = get_non_empty_positive_answer!float("please enter a price for this material: ", makeRed("price cannot be empty or negative"));
+                        db["other_materials"][newName] = get_non_empty_positive_answer!float("please enter a price for this material: ",
+                                makeRed("price cannot be empty or negative"));
                 }
                 break;
             case "addMonjogs":
