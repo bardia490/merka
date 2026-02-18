@@ -10,6 +10,7 @@ class DataBaseManager
 {
     JSONValue db;
     string dataBasePath = "./settings/works.json";
+    bool autoUpdate = false;
     
     this()
     {
@@ -27,6 +28,8 @@ class DataBaseManager
             string contents = readText("settings/work_template.json");
             db = parseJSON(contents);
         }
+        if ("auto-update" in db) autoUpdate = db["auto-update"].get!string != "off";
+        else db["auto-update"] = "off";
         printSeperator();
     }
 
@@ -272,6 +275,7 @@ class DataBaseManager
                 // if the time wasn't set, set it now
                 db["works"].object()[workName].object()["time"] = duration;
                 tResults = duration * timePrice;
+                if (autoUpdate) updateDataBase;
             }
 
         // finalizing the reults
