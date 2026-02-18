@@ -11,12 +11,14 @@
  *                                                          
  *                                                          
 */
+module source.main;
+
 import std.stdio;
 import std.string;
 import std.process;
 import std.json;
 import std.file;
-import utilites;
+import Lib.utilites.d;
 import Anniversary;
 
 void printNameArt()
@@ -25,7 +27,6 @@ void printNameArt()
     writeln(s);
 }
 
-// TODO: make this look nicer
 void printHelp()
 {
     import std.format;
@@ -46,6 +47,8 @@ void printHelp()
                  makeBlue("pap"),  makeBlue("print-all-prices")));
     writeln(format("type %=20s or %=40s to reload the contents of the settings file",
                  makeBlue("re"),  makeBlue("reload")));
+    writeln(format("type %=20s or %=40s to reload the contents of the settings file",
+                 makeBlue("up"),  makeBlue("update")));
     writeln(format("type %=20s or %=40s to add a new work",
                  makeBlue("add"),  makeBlue("add-work")));
     writeln(format("type %=20s or %=40s to remove a previous work",
@@ -60,12 +63,12 @@ void printHelp()
 void main(){
 
     // initialize the data base and app manager for updates
-    import DataBase;
+    import source.DataBase;
     DataBaseManager dbm = new DataBaseManager;
 
     version(Windows)
     {
-        import std.process: executeShell;
+        import std.process: executeShell; // force windows to use UTF8
         executeShell("chcp 65001");
     }
 
@@ -109,6 +112,11 @@ void main(){
             case "re", "reload":
                 dbm.reload;
                 writeln("new settings loaded");
+                break;
+            case "up", "update":
+                dbm.updateDataBase;
+                writeln("data base updated");
+                printSeperator;
                 break;
             case "add":
                 dbm.addWork;

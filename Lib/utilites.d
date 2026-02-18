@@ -1,3 +1,5 @@
+module Lib.utilites.d;
+
 import std.json, std.stdio, std.array;
 
 enum MDASHCOUNT = 50;

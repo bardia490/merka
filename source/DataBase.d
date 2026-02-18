@@ -1,6 +1,8 @@
+module source.DataBase;
+
 import std.stdio; 
 import std.json;
-import utilites;
+import Lib.utilites.d;
 import std.conv: to;
 import std.string: strip;
 
@@ -41,6 +43,13 @@ class DataBaseManager
             contents = readText("settings/work_template.json");
         }
         db = parseJSON(contents);
+        printSeperator();
+    }
+
+    void updateDataBase(){
+        import std.file: write;
+        write("settings/works.json",db.toPrettyString());
+        writeln("WORK ADDED SUCCESFULLY");
         printSeperator();
     }
 
@@ -257,8 +266,13 @@ class DataBaseManager
             tResults = currentWork["time"].get!float * timePrice;
         }
         else
-            if (!ignore_time)
-                tResults = calcTime(timePrice);
+            if (!ignore_time){
+                float duration = getTime();
+                //tResults = calcTime(timePrice);
+                // if the time wasn't set, set it now
+                db["works"].object()[workName].object()["time"] = duration;
+                tResults = duration * timePrice;
+            }
 
         // finalizing the reults
         results = monResults + matResults + tResults + addResults;
