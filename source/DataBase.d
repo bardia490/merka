@@ -94,7 +94,9 @@ class DataBaseManager
             float multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
             buf ~= format("%=20s %=40s\n", "Name", "Price");
             foreach (work; works)
+            {
                 createBuffer(work, buf, multValue);
+            }
             import std.file: write;
             import std.format;
             write!string(fileName, buf);
@@ -243,6 +245,7 @@ class DataBaseManager
         float results = 0; // the final results
         float mulResults = 0; // the final results after multiplier
 
+        writeln("calculating for work: ", makeBlue(workName));
         if ("monjogs" in currentWork)
         {
             if (complete && printResults)
