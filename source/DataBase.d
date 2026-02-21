@@ -92,7 +92,7 @@ class DataBaseManager
             import std.format;
             string buf = "";
             float multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
-            buf ~= format("%=20s %=40s\n", "Name", "Price");
+            buf ~= format("%=50s %=90s\n", "Name", "Price");
             foreach (work; works)
             {
                 createBuffer(work, buf, multValue);
@@ -114,7 +114,7 @@ class DataBaseManager
         // buf ~= replicate("<>", MDASHCOUNT/2) ~ workName ~ replicate("<>", MDASHCOUNT/2);
         float workPrice = calculateWork(workName, false, false, true, multValue, false);
         // buf ~= format("%s %=20s\n", workName, prettify(to!int(workPrice)));
-        buf ~= format("%=20s %=40s\n", workName, workPrice);
+        buf ~= format("%=50s %=90s\n", workName, workPrice);
     }
 
     void printWork(string workName = "")
