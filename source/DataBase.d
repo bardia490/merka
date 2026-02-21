@@ -114,6 +114,7 @@ class DataBaseManager
         // buf ~= replicate("<>", MDASHCOUNT/2) ~ workName ~ replicate("<>", MDASHCOUNT/2);
         float workPrice = calculateWork(workName, false, false, true, multValue, false);
         // buf ~= format("%s %=20s\n", workName, prettify(to!int(workPrice)));
+        buf ~= replicate("-", 120) ~ "\n"; 
         buf ~= format("%=50s %=90s\n", workName, workPrice);
     }
 
