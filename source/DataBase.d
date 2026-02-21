@@ -65,7 +65,7 @@ class DataBaseManager
         return false;
     }
 
-    void printAll(bool complete = true)
+    void printAll(bool complete = true, string fileName = "")
     {
         if (isDataBaseEmpty)
         {
@@ -87,8 +87,32 @@ class DataBaseManager
             return;
         }
         auto works = db["works"].object.keys(); 
-        foreach (work; works)
-            printWork(work);
+        bool printToFile = fileName.length != 0;
+        if (printToFile) {
+            import std.format;
+            string buf = "";
+            float multValue = get_natural_default_answer!float("do you want to multiply the results by a value (if not you can press 1 or ENTER, e.g. 1.25 or 0.75):", 1., "THE VALUE MUST BE POSITIVE");
+            buf ~= format("%=20s %=40s\n", "Name", "Price");
+            foreach (work; works)
+                createBuffer(work, buf, multValue);
+            import std.file: write;
+            import std.format;
+            write!string(fileName, buf);
+            printSeperator();
+        } else {
+            foreach (work; works)
+                printWork(work);
+        }
+    }
+
+    // creates a buffer for writing all the information about the works in a file called fileName
+    void createBuffer(string workName, ref string buf, float multValue){
+        import std.array: replicate;
+        import std.format;
+        // buf ~= replicate("<>", MDASHCOUNT/2) ~ workName ~ replicate("<>", MDASHCOUNT/2);
+        float workPrice = calculateWork(workName, false, false, true, multValue, false);
+        // buf ~= format("%s %=20s\n", workName, prettify(to!int(workPrice)));
+        buf ~= format("%=20s %=40s\n", workName, workPrice);
     }
 
     void printWork(string workName = "")
@@ -185,10 +209,11 @@ class DataBaseManager
         }
     }
 
-    bool calculateWork(string workName = "", bool complete = false,
+    // calculates the price for the works, if something goes wrong, return -1
+    float calculateWork(string workName = "", bool complete = false,
             bool ignore_time = false, bool defaultMultiply = false,
-            float defaultMultiplyValue = 1.3
-            )
+            float defaultMultiplyValue = 1.3,
+            bool printResults = true)
     {
         import std.array: split, replicate;
 
@@ -196,7 +221,7 @@ class DataBaseManager
         {
             writeln(makeRed("there was no work in the data base"));
             printSeperator();
-            return false;
+            return -1;
         }
 
         if (workName == "")
@@ -209,7 +234,7 @@ class DataBaseManager
 
         auto currentWorkRef = workName in db["works"];
         if (!currentWorkRef)
-             return false;
+             return -1;
         auto currentWork = *currentWorkRef;
         float monResults = 0; // price for monjogs
         float matResults = 0; // price for materials
@@ -220,7 +245,7 @@ class DataBaseManager
 
         if ("monjogs" in currentWork)
         {
-            if (complete)
+            if (complete && printResults)
                 printMonjog(currentWork);
             float defaultPrice = db["codes"].object()["default"].get!float;
             foreach(name_, count_; currentWork["monjogs"].object)
@@ -236,10 +261,10 @@ class DataBaseManager
             }
         }
         else 
-            return false;
+            return -1;
         if ("materials" in currentWork)
         {
-            if (complete)
+            if (complete && printResults)
                 printMaterials(currentWork);
             foreach(name_, count_; currentWork["materials"].object)
             {
@@ -252,7 +277,7 @@ class DataBaseManager
         if ("additional_costs" in db)
         {
             addResults = db["additional_costs"].object["price"].get!float;
-            if (complete)
+            if (complete && printResults)
             {
                 writeln(printSpaces("addition", SPACING), "\x1b[3;31mADDITIONAL COSTS\x1b[23;0m");
                 writeln("price",printSpaces("price"), prettify!float(addResults));
@@ -264,7 +289,7 @@ class DataBaseManager
         float timePrice = db["time"].object["price"].get!float;
         if ("time" in currentWork) // if time is already set
         {
-            if (complete)
+            if (complete && printResults)
                 printWorkTime(currentWork);
             tResults = currentWork["time"].get!float * timePrice;
         }
@@ -288,7 +313,7 @@ class DataBaseManager
         else
             multValue = defaultMultiplyValue;
         mulResults = multValue * results;
-        if (complete)
+        if (complete && printResults)
         {
             printSeperator();
             writeln("\x1b[38;5;146mthe final price for monjogs was: ", prettify(to!uint(monResults)));
@@ -300,9 +325,9 @@ class DataBaseManager
             writeln("\x1b[38;5;134mthe final price (after discount) is: ", prettify(to!int(mulResults)), "\x1b[0m");
             printSeperator();
         }
-        else
+        else if (printResults)
             writeln(mulResults);
-        return true;
+        return mulResults;
     }
 
     void calculateAllWorkPrices(bool complete = false)

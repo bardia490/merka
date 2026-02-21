@@ -274,6 +274,7 @@ T get_natural_default_answer(T)(string question, T default_, string error_messag
    return getAnswer_with_default!T(question, (T n) {return n >= 0;}, default_, error_message, print_sep); 
 }
 
+// used for long integers and adds "," between every three number and also works with floats
 string prettify(T)(in T s)
 {
     void prettifyAux(ref char[] s)

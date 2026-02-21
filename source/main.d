@@ -33,7 +33,6 @@ void printHelp()
     writeln("application help:");
     writeln(format("type %=20s or %=40s to quit the app", makeBlue("q"), makeBlue("quit")));
     writeln(format("type %=20s or %=40s to see the help",  makeBlue("h"),  makeBlue("help")));
-    //writelformat(n("tye a or all to see all the reports so far");
     writeln(format("type %=20s or %=40s to clear the screen",  makeBlue("cl"),  makeBlue("clear")));
     writeln(format("type %=20s or %=40s to calculate the price for a work",
                  makeBlue("ca"),  makeBlue("calculate-work")));
@@ -45,9 +44,11 @@ void printHelp()
                  makeBlue("pa"),  makeBlue("print-all")));
     writeln(format("type %=20s or %=40s to print all the work prices",
                  makeBlue("pap"),  makeBlue("print-all-prices")));
+    writeln(format("type %=20s or %=40s to write all the work prices into file",
+                 makeBlue("wap"),  makeBlue("write-all-prices")));
     writeln(format("type %=20s or %=40s to reload the contents of the settings file",
                  makeBlue("re"),  makeBlue("reload")));
-    writeln(format("type %=20s or %=40s to reload the contents of the settings file",
+    writeln(format("type %=20s or %=40s to write the updated database to settings file",
                  makeBlue("up"),  makeBlue("update")));
     writeln(format("type %=20s or %=40s to add a new work",
                  makeBlue("add"),  makeBlue("add-work")));
@@ -105,6 +106,10 @@ void main(){
                 break;
             case "pap", "print-all-prices":
                 dbm.calculateAllWorkPrices;
+                break;
+            case "wap", "write-all-prices":
+                string fileName = get_non_empty_answer!string("please enter the file name", (string _) {return true;}, "filename cannot be empty", true);
+                dbm.printAll(true, fileName ~ ".txt");
                 break;
             case "pw", "print_work":
                 dbm.printWork; // use the no argument printWork function
